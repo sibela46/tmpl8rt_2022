@@ -1,4 +1,4 @@
-This template is intended for students of Breda University.
+This template is intended for students of Utrecht University.
 
 **Please refer to "_ getting started.pdf" for instructions.**
 
