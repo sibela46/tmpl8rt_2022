@@ -12,10 +12,10 @@
     <ClInclude Include="template\common.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="template\precomp.h">
+    <ClInclude Include="template\scene.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="template\scene.h">
+    <ClInclude Include="template\precomp.h">
       <Filter>template</Filter>
     </ClInclude>
   </ItemGroup>
