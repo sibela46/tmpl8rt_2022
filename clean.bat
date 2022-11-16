@@ -1,29 +1,25 @@
+del *.ncb
+del *.ilk
+del *.sdf
+del *.exp
+del *.map
+del *.pdb
+del x64\*.exp
+del x64\*.lib
+del Upgradelog.xml
+del *.exe
+del *.bsc
+del applog.txt
+del *.suo /AH
+del *.user
+del *.o
+del *.VC.db
+rd ipch /S /Q
+rd release /S /Q
+rd debug /S /Q
 rd .vs /S /Q
-
-cd "1. Basics"
 rd x64\debug /S /Q
 rd x64\release /S /Q
-rd x64 /S /Q
-del buildlog.txt
-cd ..
-
-cd "2. Whitted"
-rd x64\debug /S /Q
-rd x64\release /S /Q
-rd x64 /S /Q
-del buildlog.txt
-cd ..
-
-cd "3. Cook"
-rd x64\debug /S /Q
-rd x64\release /S /Q
-rd x64 /S /Q
-del buildlog.txt
-cd ..
-
-cd "4. Kajiya"
-rd x64\debug /S /Q
-rd x64\release /S /Q
-rd x64 /S /Q
-del buildlog.txt
-cd ..
+del x64\*.exe
+del x64\*.ilk
+del x64\*.pdb
