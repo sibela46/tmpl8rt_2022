@@ -132,11 +132,22 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="template\common.h" />
+    <ClInclude Include="template\light.h" />
+    <ClInclude Include="template\newscene.h" />
+    <ClInclude Include="template\object.h" />
     <ClInclude Include="template\precomp.h" />
+    <ClInclude Include="template\ray.h" />
     <ClInclude Include="template\scene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="template\LICENSE" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="template\bunny.obj">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

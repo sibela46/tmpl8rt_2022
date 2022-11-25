@@ -11,6 +11,11 @@
 #define TWOPI		6.28318530717958647692528f
 #define SQRT_PI_INV	0.56418958355f
 #define LARGE_FLOAT	1e34f
+#define EPSILON		0.0000001
+#define WHITE		float3(1, 1, 1)
+#define RED			float3(1, 0, 0)
+#define GREEN		float3(0, 1, 0)
+#define BLUE		float3(0, 0, 1)
 
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:
 // Without a GPU, a laptop needs at least a 'Broadwell' Intel CPU (5th gen, 2015):

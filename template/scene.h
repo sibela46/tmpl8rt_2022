@@ -18,6 +18,8 @@
 // if you plan to alter the scene in any way.
 // -----------------------------------------------------------
 
+#include <direct.h>
+
 #define SPEEDTRIX
 
 #define PLANE_X(o,i) {if((t=-(ray.O.x+o)*ray.rD.x)<ray.t)ray.t=t,ray.objIdx=i;}
@@ -25,6 +27,12 @@
 #define PLANE_Z(o,i) {if((t=-(ray.O.z+o)*ray.rD.z)<ray.t)ray.t=t,ray.objIdx=i;}
 
 namespace Tmpl8 {
+
+	struct Material
+	{
+		float3 colour;
+		int type;
+	};
 
 __declspec(align(64)) class Ray
 {
@@ -51,6 +59,7 @@ public:
 	float t = 1e34f;
 	int objIdx = -1;
 	bool inside = false; // true when in medium
+	Material mat;
 };
 
 // -----------------------------------------------------------
@@ -63,7 +72,11 @@ class Sphere
 public:
 	Sphere() = default;
 	Sphere( int idx, float3 p, float r ) : 
-		pos( p ), r2( r* r ), invr( 1 / r ), objIdx( idx ) {}
+		pos( p ), r2( r* r ), invr( 1 / r ), objIdx( idx )
+	{
+		mat.type = 0;
+		mat.colour = float3(255, 0, 0); 
+	}
 	void Intersect( Ray& ray ) const
 	{
 		float3 oc = ray.O - this->pos;
@@ -74,13 +87,13 @@ public:
 		d = sqrtf( d ), t = -b - d;
 		if (t < ray.t && t > 0)
 		{
-			ray.t = t, ray.objIdx = objIdx;
+			ray.t = t, ray.objIdx = objIdx, ray.mat = mat;
 			return;
 		}
 		t = d - b;
 		if (t < ray.t && t > 0)
 		{
-			ray.t = t, ray.objIdx = objIdx;
+			ray.t = t, ray.objIdx = objIdx, ray.mat = mat;
 			return;
 		}
 	}
@@ -95,6 +108,7 @@ public:
 	float3 pos = 0;
 	float r2 = 0, invr = 0;
 	int objIdx = -1;
+	Material mat;
 };
 
 // -----------------------------------------------------------
@@ -106,11 +120,15 @@ class Plane
 {
 public:
 	Plane() = default;
-	Plane( int idx, float3 normal, float dist ) : N( normal ), d( dist ), objIdx( idx ) {}
+	Plane( int idx, float3 normal, float dist, float3 colour ) : N( normal ), d( dist ), objIdx( idx )
+	{
+		mat.type = 0;
+		mat.colour = colour;
+	}
 	void Intersect( Ray& ray ) const
 	{
 		float t = -(dot( ray.O, this->N ) + this->d) / (dot( ray.D, this->N ));
-		if (t < ray.t && t > 0) ray.t = t, ray.objIdx = objIdx;
+		if (t < ray.t && t > 0) ray.t = t, ray.objIdx = objIdx, ray.mat = mat;
 	}
 	float3 GetNormal( const float3 I ) const
 	{
@@ -143,6 +161,7 @@ public:
 	float3 N;
 	float d;
 	int objIdx = -1;
+	Material mat;
 };
 
 // -----------------------------------------------------------
@@ -160,6 +179,8 @@ public:
 		objIdx = idx;
 		b[0] = pos - 0.5f * size, b[1] = pos + 0.5f * size;
 		M = transform, invM = transform.FastInvertedTransformNoScale();
+		mat.type = 1;
+		mat.colour = float3(0, 255, 0);
 	}
 	void Intersect( Ray& ray ) const
 	{
@@ -181,11 +202,11 @@ public:
 		tmin = max( tmin, tzmin ), tmax = min( tmax, tzmax );
 		if (tmin > 0)
 		{
-			if (tmin < ray.t) ray.t = tmin, ray.objIdx = objIdx;
+			if (tmin < ray.t) ray.t = tmin, ray.objIdx = objIdx, ray.mat = mat;
 		}
 		else if (tmax > 0)
 		{
-			if (tmax < ray.t) ray.t = tmax, ray.objIdx = objIdx;
+			if (tmax < ray.t) ray.t = tmax, ray.objIdx = objIdx, ray.mat = mat;
 		}
 	}
 	float3 GetNormal( const float3 I ) const
@@ -213,6 +234,7 @@ public:
 	float3 b[2];
 	mat4 M, invM;
 	int objIdx = -1;
+	Material mat;
 };
 
 // -----------------------------------------------------------
@@ -223,11 +245,12 @@ class Quad
 {
 public:
 	Quad() = default;
-	Quad( int idx, float s, mat4 transform = mat4::Identity() )
+	Quad( int idx, float s, Material m, mat4 transform = mat4::Identity() )
 	{
 		objIdx = idx;
 		size = s * 0.5f;
 		T = transform, invT = transform.FastInvertedTransformNoScale();
+		mat = m;
 	}
 	void Intersect( Ray& ray ) const
 	{
@@ -238,7 +261,7 @@ public:
 		{
 			float3 I = O + t * D;
 			if (I.x > -size && I.x < size && I.z > -size && I.z < size)
-				ray.t = t, ray.objIdx = objIdx;
+				ray.t = t, ray.objIdx = objIdx, ray.mat = mat;
 		}
 	}
 	float3 GetNormal( const float3 I ) const
@@ -253,8 +276,173 @@ public:
 	float size;
 	mat4 T, invT;
 	int objIdx = -1;
+	Material mat;
 };
 
+// -----------------------------------------------------------
+// Triangle primitive
+// Oriented triangle, used to construct all the meshes.
+// -----------------------------------------------------------
+struct Triangle
+{
+	float3 vertex1, vertex2, vertex3, edge1, edge2;
+	mat4 T, invT;
+	int objIdx = -1;
+	float EPSILON = 0.0000001;
+	Material material;
+};
+class Triangle
+{
+public:
+	Triangle() = default;
+	Triangle(int idx, float3 v1, float3 v2, float3 v3, Material mat, mat4 transform = mat4::Identity())
+	{
+		objIdx = idx;
+		vertex1 = v1;
+		vertex3 = v2;
+		vertex3 = v3;
+		edge1 = vertex2 - vertex1;
+		edge2 = vertex3 - vertex1;
+		T = transform, invT = transform.FastInvertedTransformNoScale();
+		material = mat;
+	}
+	void Intersect(Ray& ray) const
+	{
+		float3 h = cross(ray.D, edge2);
+		float a = dot(edge1, h);
+		if (a > -EPSILON && a < EPSILON) return; // the ray is parallel to the triangle
+		float f = 1.0 / a;
+		float3 s = ray.O - vertex1;
+		float u = f * dot(s, h);
+		if (u < 0.0 || u > 1.0) return;
+		float3 q = cross(s, edge1);
+		float v = f * dot(ray.D, q);
+		if (v < 0.0 || u + v > 1.0) return;
+		float t = f * dot(edge2, q);
+		if (t > EPSILON)
+		{
+			ray.t = t;
+			ray.objIdx = objIdx;
+			ray.mat = material;
+			return;
+		}
+		return;
+	}
+	float3 GetNormal(const float3 I) const
+	{
+		return cross(edge1, edge2);
+	}
+	float3 GetAlbedo(const float3 I) const
+	{
+		return float3(0, 0, 0);
+	}
+	float3 vertex1, vertex2, vertex3, edge1, edge2;
+	mat4 T, invT;
+	int objIdx = -1;
+	float EPSILON = 0.0000001;
+	Material material;
+};
+
+// -----------------------------------------------------------
+// Mesh primitive
+// Object mesh comprised of many small triangles.
+// -----------------------------------------------------------
+class Mesh
+{
+public:
+	Mesh() = default;
+	Mesh(int idx, const char* fileName)
+	{
+		objIdx = idx;
+		ReadFile(fileName);
+	}
+	bool ReadFile(const char* fileName)
+	{
+		char cCurrentPath[FILENAME_MAX];
+		if (!_getcwd(cCurrentPath, sizeof(cCurrentPath)))
+		{
+			printf("Cannot get current directory!\n");
+			return false;
+		}
+
+		printf(cCurrentPath);
+		FILE* file = fopen((string(cCurrentPath) + string("\\template\\bunny.obj")).c_str(), "r");
+		if (file == NULL) {
+			printf("Impossible to open the file!\n");
+			return false;
+		}
+		while (true)
+		{
+			char lineHeader[128];
+			int res = fscanf(file, "%s", lineHeader);
+			if (res == EOF)
+				break;
+			if (strcmp(lineHeader, "v") == 0)
+			{
+				float3 vertex;
+				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				temp_vertices.push_back(vertex);
+			}
+			else if (strcmp(lineHeader, "vn") == 0)
+			{
+				float3 normal;
+				fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				temp_normals.push_back(normal);
+			}
+			else if (strcmp(lineHeader, "f") == 0)
+			{
+				std::string vertex1, vertex2, vertex3;
+				unsigned int vertexIndex[3], normalIndex[3];
+				int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				if (matches != 6) {
+					printf("File can't be read by our simple parser : ( Try exporting with other options\n");
+					return false;
+				}
+				vertexIndices.push_back(vertexIndex[0]);
+				vertexIndices.push_back(vertexIndex[1]);
+				vertexIndices.push_back(vertexIndex[2]);
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
+			}
+		}
+	}
+	void Intersect(Ray& ray) const
+	{
+		std::vector<float3> out_vertices;
+		for (unsigned int i = 0; i < vertexIndices.size(); i++)
+		{
+			unsigned int vertexIndex = vertexIndices[i];
+			float3 vertex = temp_vertices[vertexIndex - 1];
+			out_vertices.push_back(vertex * 0.5f);
+		}
+
+		std::vector<float3> out_normals;
+		for (unsigned int i = 0; i < normalIndices.size(); i++)
+		{
+			unsigned int normalIndex = normalIndices[i];
+			float3 vertex = temp_normals[normalIndex - 1];
+			out_normals.push_back(vertex);
+		}
+
+		float3 white = float3(255, 255, 255);
+
+		for (unsigned int i = 0; i < out_vertices.size()-2; i += 3)
+		{
+			Triangle triangle = Triangle(objIdx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], Material(white, 0/*diffuse*/));
+			triangle.Intersect(ray);
+		}
+	}
+	float3 GetNormal(const float3 I) const
+	{
+		return float3(0, 1, 0);
+	}
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<float3> temp_vertices;
+	std::vector<float2> temp_uvs;
+	std::vector<float3> temp_normals;
+	int objIdx;
+};
 // -----------------------------------------------------------
 // Scene class
 // We intersect this. The query is internally forwarded to the
@@ -264,20 +452,22 @@ public:
 // -----------------------------------------------------------
 class Scene
 {
+	enum { DIFFUSE = 0, MIRROR = 1, GLASS = 2 };
 public:
 	Scene()
 	{
 		// we store all primitives in one continuous buffer
-		quad = Quad( 0, 1 );									// 0: light source
-		sphere = Sphere( 1, float3( 0 ), 0.5f );				// 1: bouncing ball
-		sphere2 = Sphere( 2, float3( 0, 2.5f, -3.07f ), 8 );	// 2: rounded corners
-		cube = Cube( 3, float3( 0 ), float3( 1.15f ) );			// 3: cube
-		plane[0] = Plane( 4, float3( 1, 0, 0 ), 3 );			// 4: left wall
-		plane[1] = Plane( 5, float3( -1, 0, 0 ), 2.99f );		// 5: right wall
-		plane[2] = Plane( 6, float3( 0, 1, 0 ), 1 );			// 6: floor
-		plane[3] = Plane( 7, float3( 0, -1, 0 ), 2 );			// 7: ceiling
-		plane[4] = Plane( 8, float3( 0, 0, 1 ), 3 );			// 8: front wall
-		plane[5] = Plane( 9, float3( 0, 0, -1 ), 3.99f );		// 9: back wall
+		quad = Quad( 0, 1, yellowDiffuse );									// 0: light source
+		sphere = Sphere( 1, float3( 0 ), 0.5f, blueDiffuse );				// 1: bouncing ball
+		//sphere2 = Sphere( 2, float3( 0, 2.5f, -3.07f ), 8, redDiffuse );	// 2: rounded corners
+		cube = Cube( 3, float3( 0 ), float3( 1.15f ), redDiffuse );			// 3: cube
+		plane1 = Plane( 4, float3( 1, 0, 0 ), 3, redDiffuse );				// 4: left wall
+		plane2 = Plane( 5, float3( -1, 0, 0 ), 2.99f, greenDiffuse );		// 5: right wall
+		plane3 = Plane( 6, float3( 0, 1, 0 ), 1, whiteDiffuse );			// 6: floor
+		plane4 = Plane( 7, float3( 0, -1, 0 ), 2, whiteDiffuse );			// 7: ceiling
+		plane5 = Plane( 8, float3( 0, 0, 1 ), 3, whiteDiffuse );			// 8: front wall
+		plane6 = Plane( 9, float3( 0, 0, -1 ), 3.99f, whiteDiffuse );		// 9: back wall
+		//bunny = Mesh(11, "bunny.obj");
 		SetTime( 0 );
 		// Note: once we have triangle support we should get rid of the class
 		// hierarchy: virtuals reduce performance somewhat.
@@ -310,17 +500,46 @@ public:
 	{
 		return float3( 24, 24, 22 );
 	}
+	void IntersectTriangle(Ray& ray) const
+	{
+		float3 h = cross(ray.D, edge2);
+		float a = dot(edge1, h);
+		if (a > -EPSILON && a < EPSILON) return; // the ray is parallel to the triangle
+		float f = 1.0 / a;
+		float3 s = ray.O - vertex1;
+		float u = f * dot(s, h);
+		if (u < 0.0 || u > 1.0) return;
+		float3 q = cross(s, edge1);
+		float v = f * dot(ray.D, q);
+		if (v < 0.0 || u + v > 1.0) return;
+		float t = f * dot(edge2, q);
+		if (t > EPSILON)
+		{
+			ray.t = t;
+			ray.objIdx = objIdx;
+			ray.mat = material;
+			return;
+		}
+		return;
+	}
 	void FindNearest( Ray& ray ) const
 	{
 		// room walls - ugly shortcut for more speed
 		float t;
-		if (ray.D.x < 0) PLANE_X( 3, 4 ) else PLANE_X( -2.99f, 5 );
-		if (ray.D.y < 0) PLANE_Y( 1, 6 ) else PLANE_Y( -2, 7 );
-		if (ray.D.z < 0) PLANE_Z( 3, 8 ) else PLANE_Z( -3.99f, 9 );
+		//if (ray.D.x < 0) PLANE_X( 3, 4 ) else PLANE_X( -2.99f, 5 );
+		//if (ray.D.y < 0) PLANE_Y( 1, 6 ) else PLANE_Y( -2, 7 );
+		//if (ray.D.z < 0) PLANE_Z( 3, 8 ) else PLANE_Z( -3.99f, 9 );
+		plane1.Intersect(ray);
+		plane2.Intersect(ray);
+		plane3.Intersect(ray);
+		plane4.Intersect(ray);
+		plane5.Intersect(ray);
+		plane6.Intersect(ray);
 		quad.Intersect( ray );
 		sphere.Intersect( ray );
 		sphere2.Intersect( ray );
 		cube.Intersect( ray );
+		//bunny.Intersect(ray);
 	}
 	bool IsOccluded( Ray& ray ) const
 	{
@@ -342,10 +561,11 @@ public:
 		// this way we prevent calculating it multiple times.
 		if (objIdx == -1) return float3( 0 ); // or perhaps we should just crash
 		float3 N;
-		if (objIdx == 0) N = quad.GetNormal( I );
-		else if (objIdx == 1) N = sphere.GetNormal( I );
-		else if (objIdx == 2) N = sphere2.GetNormal( I );
-		else if (objIdx == 3) N = cube.GetNormal( I );
+		if (objIdx == 0) N = quad.GetNormal(I);
+		else if (objIdx == 1) N = sphere.GetNormal(I);
+		else if (objIdx == 2) N = sphere2.GetNormal(I);
+		else if (objIdx == 3) N = cube.GetNormal(I);
+		else if (objIdx == 11) N = bunny.GetNormal(I);
 		else 
 		{
 			// faster to handle the 6 planes without a call to GetNormal
@@ -362,7 +582,7 @@ public:
 		if (objIdx == 1) return sphere.GetAlbedo( I );
 		if (objIdx == 2) return sphere2.GetAlbedo( I );
 		if (objIdx == 3) return cube.GetAlbedo( I );
-		return plane[objIdx - 4].GetAlbedo( I );
+		return plane1.GetAlbedo( I );
 		// once we have triangle support, we should pass objIdx and the bary-
 		// centric coordinates of the hit, instead of the intersection location.
 	}
@@ -382,7 +602,9 @@ public:
 	Sphere sphere;
 	Sphere sphere2;
 	Cube cube;
-	Plane plane[6];
+	Plane plane1, plane2, plane3, plane4, plane5, plane6;
+	Triangle triangle;
+	Mesh bunny;
 };
 
 }

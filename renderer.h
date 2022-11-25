@@ -8,7 +8,7 @@ class Renderer : public TheApp
 public:
 	// game flow methods
 	void Init();
-	float3 Trace( Ray& ray );
+	float3 Trace( Ray& ray, int depth );
 	void Tick( float deltaTime );
 	void Shutdown() { /* implement if you want to do something on exit */ }
 	// input handling
@@ -18,10 +18,12 @@ public:
 	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ }
 	void KeyUp( int key ) { /* implement if you want to handle keys */ }
 	void KeyDown( int key ) { /* implement if you want to handle keys */ }
+	void KeyPress();
 	// data members
 	int2 mousePos;
 	float4* accumulator;
-	Scene scene;
+	//Scene scene;
+	NewScene scene;
 	Camera camera;
 };
 

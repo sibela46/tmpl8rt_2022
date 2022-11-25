@@ -1647,7 +1647,18 @@ public:
 	Surface* screen = 0;
 };
 
-#include "scene.h"
+
+struct Material
+{
+	float3 colour;
+	int type;
+};
+
+//#include "scene.h"
+#include "ray.h"
+#include "light.h"
+#include "object.h"
+#include "newscene.h"
 #include "camera.h"
 #include "renderer.h"
 

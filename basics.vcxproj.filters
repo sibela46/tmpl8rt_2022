@@ -18,6 +18,18 @@
     <ClInclude Include="template\precomp.h">
       <Filter>template</Filter>
     </ClInclude>
+    <ClInclude Include="template\newscene.h">
+      <Filter>template</Filter>
+    </ClInclude>
+    <ClInclude Include="template\ray.h">
+      <Filter>template</Filter>
+    </ClInclude>
+    <ClInclude Include="template\object.h">
+      <Filter>template</Filter>
+    </ClInclude>
+    <ClInclude Include="template\light.h">
+      <Filter>template</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
@@ -28,5 +40,10 @@
     <None Include="template\LICENSE">
       <Filter>template</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="template\bunny.obj">
+      <Filter>template</Filter>
+    </Object>
   </ItemGroup>
 </Project>
