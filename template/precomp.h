@@ -1647,11 +1647,14 @@ public:
 	Surface* screen = 0;
 };
 
+enum class MaterialType { DIFFUSE = 0, GLASS = 1, MIRROR = 2 };
 
 struct Material
 {
 	float3 colour;
-	int type;
+	MaterialType type;
+	float Kd;
+	float Ks;
 };
 
 //#include "scene.h"

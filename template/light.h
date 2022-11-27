@@ -8,11 +8,18 @@ class Light
 {
 public:
 	Light() = default;
-	Light(float3 position, float emission)
-		: position(position), emission(emission)
+	Light(float3 position)
+		: position(position)
 	{
+		emission = 1.f;
+		colour = float3(1, 1, 1);
+	}
+	void Intersect()
+	{
+
 	}
 	float3 position;
+	float3 colour;
 	float emission;
 };
 }

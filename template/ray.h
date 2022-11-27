@@ -19,7 +19,7 @@ public:
 		d0 = d1 = d2 = 0;
 #endif
 	}
-	float3 IntersectionPoint() { return O + t * D; }
+	float3 IntersectionPoint() { return (O + t * D); }
 	// ray data
 #ifndef SPEEDTRIX
 	float3 O, D, rD;
@@ -32,6 +32,7 @@ public:
 	int objIdx = -1;
 	bool inside = false; // true when in medium
 	Material mat;
+	float3 normal; // normal at intersection point
 };
 
 }
