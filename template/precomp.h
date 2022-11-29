@@ -850,7 +850,37 @@ inline int3 abs( const int3& v ) { return make_int3( abs( v.x ), abs( v.y ), abs
 inline int4 abs( const int4& v ) { return make_int4( abs( v.x ), abs( v.y ), abs( v.z ), abs( v.w ) ); }
 
 inline float3 reflect( const float3 i, const float3 n ) { return i - 2.0f * n * dot( n, i ); }
-inline float3 refract(const float3& i, const float3& n, bool inside) { float ior = 1.1, eta = inside ? ior : 1 / ior; float cosi = dot(-n, i); float k = 1 - eta * eta * (1 - cosi * cosi); return i * eta + n * (eta * cosi - sqrt(k)); }
+inline float3 refract(const float3& i, const float3& n, const float ior) { 
+	float cosi = clamp(-1.f, 1.f, dot(i, n));
+	float etai = 1, etat = ior;
+	float3 N = n;
+	if (cosi < 0) { cosi = -cosi; }
+	else { std::swap(etai, etat); N = -n; }
+	float eta = etai / etat;
+	float k = 1 - eta * eta * (1 - cosi * cosi);
+	return k < 0 ? 0 : eta * i + (eta * cosi - sqrtf(k)) * n;
+}
+inline float fresnel(const float3& I, const float3& N, const float& ior)
+{
+	float cosi = clamp(-1.f, 1.f, dot(I, N));
+	float etai = 1, etat = ior;
+	if (cosi > 0) { std::swap(etai, etat); }
+	// Compute sini using Snell's law
+	float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi));
+	// Total internal reflection
+	if (sint >= 1) {
+		return 1;
+	}
+	else {
+		float cost = sqrtf(std::max(0.f, 1 - sint * sint));
+		cosi = fabsf(cosi);
+		float Rs = ((etat * cosi) - (etai * cost)) / ((etat * cosi) + (etai * cost));
+		float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
+		return (Rs * Rs + Rp * Rp) / 2;
+	}
+	// As a consequence of the conservation of energy, transmittance is given by:
+	// kt = 1 - kr;
+}
 
 inline float3 cross( const float3& a, const float3& b ) { return make_float3( a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x ); }
 

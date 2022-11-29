@@ -5,14 +5,28 @@ Object::Object(int index, float3 position, Material material)
 {
 }
 
-float3 Object::GetShade(Light* light, float3 I, float3 N)
+float3 Object::GetDirectLight(Light* light, float3 I, float3 N)
 {
 	float3 dirToLight = (light->GetPosition() - I);
 	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
-	/*if (dotProduct == 0)
-	{
-		printf("%f %f %f\n", normalize(dirToLight).x, normalize(dirToLight).y, normalize(dirToLight).z);
-		printf("%f %f %f\n", normal.x, normal.y, normal.z);
-	}*/
 	return light->GetEmission() * light->GetColour()  * dotProduct * (1/PI);
+}
+
+float3 Object::GetIndirectLight(Light* light, float3 I, float3 N)
+{
+	return 0;
+}
+
+float3 Object::GetSpecularColour(Light* light, float3 I, float3 N, float3 D)
+{
+	float3 distToLight = normalize(light->position - I);
+	float A = 4 * PI * dot(distToLight, distToLight);
+	float3 B = light->GetColour() / A;
+	float3 reflected = normalize(reflect(-distToLight, N));
+	return pow(-dot(reflected, D), 20.0f);
+}
+
+float3 Object::GetAlbedo(Light* light, float3 I, float3 N, float3 D)
+{
+	return material.colour * material.Kd + material.Ks * GetSpecularColour(light, I, N, D);
 }

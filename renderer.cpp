@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 10) return 0; // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 30) return 0; // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -28,7 +28,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
-		returnColour += ray.objMaterial.colour * scene->GetShade(ray.objIdx, I, N);
+		returnColour += scene->GetAlbedo(ray.objIdx, I, N, ray.D) * scene->GetShade(ray.objIdx, I, N);
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
 	{
@@ -43,22 +43,25 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	}
 	else if (ray.objMaterial.type == MaterialType::GLASS)
 	{
-		float fresneleffect = pow(1 - dot(-I, N), 3);
 		bool outside = dot(ray.D, N) < 0;
 		float3 bias = 0.001f * N;
 		float3 origin = outside ? I + bias : I - bias;
 
-		float3 reflVec = reflect(ray.D, N);
-		Ray reflRay = Ray(origin, normalize(reflVec));
+		float3 reflVec = normalize(reflect(ray.D, N));
+		Ray reflRay = Ray(origin, reflVec);
+		float3 reflectionColour = Trace(reflRay, depth + 1);
 
-		returnColour += Trace(reflRay, depth + 1);
-
-		float3 refrVec = refract(ray.D, N, !outside);
-		Ray refrRay = Ray(origin, normalize(refrVec));
-
-		returnColour += Trace(refrRay, depth + 1);
+		float kr = fresnel(ray.D, N, 1.5f);
+		float3 refractionColour;
+		if (kr < 1) {
+			float3 refractionDirection = normalize(refract(ray.D, N, 1.5));
+			float3 refractionRayOrig = outside ? I - bias : I + bias;
+			Ray refrRay = Ray(refractionRayOrig, refractionDirection);
+			refractionColour = Trace(refrRay, depth + 1);
+		}
 		
-		returnColour += reflRay.objMaterial.colour * scene->GetShade(reflRay.objIdx, reflRay.IntersectionPoint(), N) * fresneleffect + refrRay.objMaterial.colour * (1 - fresneleffect) * scene->GetShade(refrRay.objIdx, refrRay.IntersectionPoint(), N) * refrRay.objMaterial.colour;
+
+		returnColour += kr * reflectionColour + (1 - kr) * refractionColour;
 	}
 
 	return returnColour;
