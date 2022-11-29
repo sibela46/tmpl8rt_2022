@@ -5,6 +5,22 @@
     <ClCompile Include="template\template.cpp">
       <Filter>template</Filter>
     </ClCompile>
+    <ClCompile Include="objects\Triangle.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\Plane.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\Sphere.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="objects\Object.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\Light.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -12,28 +28,35 @@
     <ClInclude Include="template\common.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="template\scene.h">
-      <Filter>template</Filter>
-    </ClInclude>
     <ClInclude Include="template\precomp.h">
-      <Filter>template</Filter>
-    </ClInclude>
-    <ClInclude Include="template\newscene.h">
       <Filter>template</Filter>
     </ClInclude>
     <ClInclude Include="template\ray.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="template\object.h">
-      <Filter>template</Filter>
+    <ClInclude Include="objects\Triangle.h">
+      <Filter>objects</Filter>
     </ClInclude>
-    <ClInclude Include="template\light.h">
-      <Filter>template</Filter>
+    <ClInclude Include="objects\Sphere.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\Plane.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="objects\Object.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\Light.h">
+      <Filter>objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
       <UniqueIdentifier>{a7d6e3cb-bfcd-438d-979f-17df241a55b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="objects">
+      <UniqueIdentifier>{d43a7cbf-4252-4430-93a5-39b2d5ebc184}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <Object Include="template\bunny.obj">
+      <Filter>template</Filter>
+    </Object>
+    <Object Include="template\sphere.obj">
       <Filter>template</Filter>
     </Object>
   </ItemGroup>

@@ -122,7 +122,13 @@
   </ItemDefinitionGroup>
   <!-- END Custom section -->
   <ItemGroup>
+    <ClCompile Include="objects\Light.cpp" />
+    <ClCompile Include="objects\Object.cpp" />
+    <ClCompile Include="objects\Plane.cpp" />
+    <ClCompile Include="objects\Sphere.cpp" />
+    <ClCompile Include="objects\Triangle.cpp" />
     <ClCompile Include="renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="template\template.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -130,14 +136,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="objects\Light.h" />
+    <ClInclude Include="objects\Object.h" />
+    <ClInclude Include="objects\Plane.h" />
+    <ClInclude Include="objects\Sphere.h" />
+    <ClInclude Include="objects\Triangle.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="Scene.h" />
     <ClInclude Include="template\common.h" />
-    <ClInclude Include="template\light.h" />
-    <ClInclude Include="template\newscene.h" />
-    <ClInclude Include="template\object.h" />
     <ClInclude Include="template\precomp.h" />
     <ClInclude Include="template\ray.h" />
-    <ClInclude Include="template\scene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="template\LICENSE" />
@@ -147,6 +155,10 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="template\sphere.obj">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

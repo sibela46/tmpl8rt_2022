@@ -8,6 +8,8 @@ void Renderer::Init()
 	// create fp32 rgb pixel buffer to render to
 	accumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
+
+	scene = new Scene();
 }
 
 // -----------------------------------------------------------
@@ -15,36 +17,51 @@ void Renderer::Init()
 // -----------------------------------------------------------
 float3 Renderer::Trace( Ray& ray, int depth )
 {
-	scene.FindNearest( ray );
-	if (ray.objIdx == -1|| depth == 10) return 0; // or a fancy sky color
-	float3 I = ray.O + (0.000001f * ray.normal) + ray.t * ray.D;
-	float3 N = ray.normal;
-	float3 albedo = scene.GetAlbedo( ray.objIdx, I );
+	scene->FindNearest(ray);
+	if (ray.objIdx == -1 || depth == 10) return 0; // or a fancy sky color
+	float3 I = ray.O + ray.t * ray.D;
+	float3 N = scene->GetNormal(ray.objIdx, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
 	/* visualize distance */ // return 0.1f * float3( ray.t, ray.t, ray.t );
-	/* visualize albedo */ // return albedo;
-	
-	if (scene.IsOccluded(I))
+
+	float3 returnColour = 0;
+
+	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
-		return 0;
+		returnColour += ray.objMaterial.colour * scene->GetShade(ray.objIdx, I, N);
+	}
+	else if (ray.objMaterial.type == MaterialType::MIRROR)
+	{
+		float3 bias = 0.001f * N;
+		bool outside = dot(ray.D, N) < 0;
+
+		float3 reflVec = reflect(ray.D, N);
+		float3 reflRayOrigin = outside ? I + bias : I - bias;
+		Ray reflRay = Ray(reflRayOrigin, reflVec);
+
+		returnColour += Trace(reflRay, depth + 1);
+	}
+	else if (ray.objMaterial.type == MaterialType::GLASS)
+	{
+		float fresneleffect = pow(1 - dot(-I, N), 3);
+		bool outside = dot(ray.D, N) < 0;
+		float3 bias = 0.001f * N;
+		float3 origin = outside ? I + bias : I - bias;
+
+		float3 reflVec = reflect(ray.D, N);
+		Ray reflRay = Ray(origin, normalize(reflVec));
+
+		returnColour += Trace(reflRay, depth + 1);
+
+		float3 refrVec = refract(ray.D, N, !outside);
+		Ray refrRay = Ray(origin, normalize(refrVec));
+
+		returnColour += Trace(refrRay, depth + 1);
+		
+		returnColour += reflRay.objMaterial.colour * scene->GetShade(reflRay.objIdx, reflRay.IntersectionPoint(), N) * fresneleffect + refrRay.objMaterial.colour * (1 - fresneleffect) * scene->GetShade(refrRay.objIdx, refrRay.IntersectionPoint(), N) * refrRay.objMaterial.colour;
 	}
 
-	if (ray.mat.type == MaterialType::DIFFUSE)
-	{
-		return ray.mat.colour;
-	}
-	else if (ray.mat.type == MaterialType::MIRROR)
-	{
-		float3 reflVec = reflect(I, N);
-		Ray reflRay = Ray(I, normalize(reflVec));
-
-		return Trace(reflRay, depth + 1);
-	}
-	else if (ray.mat.type == MaterialType::GLASS)
-	{
-		// implement glass
-	}
-	return 0;
+	return returnColour;
 }
 
 // -----------------------------------------------------------

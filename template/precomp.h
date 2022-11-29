@@ -849,7 +849,8 @@ inline int2 abs( const int2& v ) { return make_int2( abs( v.x ), abs( v.y ) ); }
 inline int3 abs( const int3& v ) { return make_int3( abs( v.x ), abs( v.y ), abs( v.z ) ); }
 inline int4 abs( const int4& v ) { return make_int4( abs( v.x ), abs( v.y ), abs( v.z ), abs( v.w ) ); }
 
-inline float3 reflect( const float3& i, const float3& n ) { return i - 2.0f * n * dot( n, i ); }
+inline float3 reflect( const float3 i, const float3 n ) { return i - 2.0f * n * dot( n, i ); }
+inline float3 refract(const float3& i, const float3& n, bool inside) { float ior = 1.1, eta = inside ? ior : 1 / ior; float cosi = dot(-n, i); float k = 1 - eta * eta * (1 - cosi * cosi); return i * eta + n * (eta * cosi - sqrt(k)); }
 
 inline float3 cross( const float3& a, const float3& b ) { return make_float3( a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x ); }
 
@@ -1647,6 +1648,7 @@ public:
 	Surface* screen = 0;
 };
 
+// Material structure
 enum class MaterialType { DIFFUSE = 0, GLASS = 1, MIRROR = 2 };
 
 struct Material
@@ -1657,11 +1659,13 @@ struct Material
 	float Ks;
 };
 
-//#include "scene.h"
 #include "ray.h"
-#include "light.h"
-#include "object.h"
-#include "newscene.h"
+#include "objects/Object.h"
+#include "objects/Triangle.h"
+#include "objects/Sphere.h"
+#include "objects/Plane.h"
+#include "objects/Light.h"
+#include "Scene.h"
 #include "camera.h"
 #include "renderer.h"
 

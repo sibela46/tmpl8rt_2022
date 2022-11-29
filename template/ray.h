@@ -31,8 +31,7 @@ public:
 	float t = 1e34f;
 	int objIdx = -1;
 	bool inside = false; // true when in medium
-	Material mat;
-	float3 normal; // normal at intersection point
+	Material objMaterial;
 };
 
 }
