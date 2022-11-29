@@ -14,15 +14,25 @@ public:
 	void Shutdown() { /* implement if you want to do something on exit */ }
 	// input handling
 	void MouseUp( int button ) { /* implement if you want to detect mouse button presses */ 
-		press = false;
+		if (button == 0)
+			press = false;
+		if (button == 1)
+			pressL = false;
 	}
 	void MouseDown( int button ) { /* implement if you want to detect mouse button presses */ 
-		press = true;
+		if(button==0)
+			press = true;
+		if (button == 1)
+			pressL = true;
 	}
 	void MouseMove( int x, int y ) { mousePos.x = x, mousePos.y = y;
-		if (press) {
+		if (pressL) {
 			camera.RotateX((y - prevY) * rotspeed);
 			camera.RotateY((x - prevX) * rotspeed);
+		}
+		if (press) {
+			camera.Translate(float3(0, (y - prevY) * rotspeed *0.05, 0));
+			camera.Translate(float3(-(x - prevX) * rotspeed *0.05, 0, 0));
 		}
 		prevX = x;
 		prevY = y;
@@ -54,6 +64,7 @@ public:
 	Scene* scene;
 	Camera camera;
 	bool press;
+	bool pressL;
 	float rotspeed = 0.3;
 	int prevX;
 	int prevY;
