@@ -13,12 +13,39 @@ public:
 	void Tick( float deltaTime );
 	void Shutdown() { /* implement if you want to do something on exit */ }
 	// input handling
-	void MouseUp( int button ) { /* implement if you want to detect mouse button presses */ }
-	void MouseDown( int button ) { /* implement if you want to detect mouse button presses */ }
-	void MouseMove( int x, int y ) { mousePos.x = x, mousePos.y = y; }
-	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ }
+	void MouseUp( int button ) { /* implement if you want to detect mouse button presses */ 
+		press = false;
+	}
+	void MouseDown( int button ) { /* implement if you want to detect mouse button presses */ 
+		press = true;
+	}
+	void MouseMove( int x, int y ) { mousePos.x = x, mousePos.y = y;
+		if (press) {
+			camera.RotateX((y - prevY) * rotspeed);
+			camera.RotateY((x - prevX) * rotspeed);
+		}
+		prevX = x;
+		prevY = y;
+	}
+	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ 
+		if(y>0)
+			camera.Translate(float3(0, 0, 1));
+		if(y<0)
+			camera.Translate(float3(0, 0, -1));
+	}
 	void KeyUp( int key ) { /* implement if you want to handle keys */ }
-	void KeyDown( int key ) { /* implement if you want to handle keys */ }
+	void KeyDown( int key ) { /* implement if you want to handle keys */ 
+		cout << key;
+		if (key == 'W')				
+			camera.Translate(float3(0, 1, 0));
+		if (key == 'S')
+			camera.Translate(float3(0, -1, 0));
+		if (key == 'A')
+			camera.Translate(float3(-1, 0, 0));
+		if (key == 'D')
+			camera.Translate(float3(1, 0, 0));
+
+	}
 	void KeyPress();
 	// data members
 	int2 mousePos;
@@ -26,6 +53,10 @@ public:
 	//Scene scene;
 	Scene* scene;
 	Camera camera;
+	bool press;
+	float rotspeed = 0.3;
+	int prevX;
+	int prevY;
 };
 
 } // namespace Tmpl8

@@ -1,4 +1,7 @@
 #pragma once
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 
 // default screen resolution
 #define SCRWIDTH	1280
@@ -21,6 +24,7 @@ public:
 		topLeft = float3( -aspect, 1, 0 );
 		topRight = float3( aspect, 1, 0 );
 		bottomLeft = float3( -aspect, -1, 0 );
+
 	}
 	float getRadians(const float angle)
 	{
@@ -36,15 +40,30 @@ public:
 	}
 	void RotateY(const float angle)
 	{
-		const float radians = angle * (PI / 180);
-		const mat4 rotation = mat4::RotateY(radians);
+		const mat4 rotation = mat4::RotateY(getRadians(angle));
+		topLeft = topLeft * rotation;
+		topRight = topRight * rotation;
+		bottomLeft = bottomLeft * rotation;
 		camPos = camPos * rotation;
 	}
 	void RotateX(const float angle)
 	{
 		const mat4 rotation = mat4::RotateX(getRadians(angle));
+		topLeft = topLeft * rotation;
+		topRight = topRight * rotation;
+		bottomLeft = bottomLeft * rotation;
 		camPos = camPos * rotation;
 	}
+	void Translate(float3 P)
+	{
+		float speed = 0.3;
+		P = P * speed;
+		topLeft += P;
+		topRight += P;
+		bottomLeft += P;
+		camPos += P;
+	}
+
 	float aspect = (float)SCRWIDTH / (float)SCRHEIGHT;
 	float3 camPos;
 	float3 topLeft, topRight, bottomLeft;
