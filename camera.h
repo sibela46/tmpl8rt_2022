@@ -54,15 +54,22 @@ public:
 		bottomLeft = bottomLeft * rotation;
 		camPos = camPos * rotation;
 	}
-	void Translate(float3 P)
+	void Translate(float x, float y, float z)
 	{
+		float3 X = normalize(topRight - topLeft);
+		float3 Y = normalize(topLeft - bottomLeft);
+		float3 Z = cross(X, Y);
+
 		float speed = 0.3;
+		float3 P = X * x + Y * y + Z * z;
 		P = P * speed;
+
 		topLeft += P;
 		topRight += P;
 		bottomLeft += P;
 		camPos += P;
 	}
+	
 
 	float aspect = (float)SCRWIDTH / (float)SCRHEIGHT;
 	float3 camPos;

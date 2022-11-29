@@ -31,31 +31,16 @@ public:
 			camera.RotateY((x - prevX) * rotspeed);
 		}
 		if (press) {
-			camera.Translate(float3(0, (y - prevY) * rotspeed *0.05, 0));
-			camera.Translate(float3(-(x - prevX) * rotspeed *0.05, 0, 0));
+			camera.Translate(-(x - prevX) * rotspeed * 0.05, (y - prevY) * rotspeed * 0.05, 0);
 		}
 		prevX = x;
 		prevY = y;
 	}
 	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ 
-		if(y>0)
-			camera.Translate(float3(0, 0, 1));
-		if(y<0)
-			camera.Translate(float3(0, 0, -1));
+		camera.Translate(0, 0, y);
 	}
 	void KeyUp( int key ) { /* implement if you want to handle keys */ }
-	void KeyDown( int key ) { /* implement if you want to handle keys */ 
-		cout << key;
-		if (key == 'W')				
-			camera.Translate(float3(0, 1, 0));
-		if (key == 'S')
-			camera.Translate(float3(0, -1, 0));
-		if (key == 'A')
-			camera.Translate(float3(-1, 0, 0));
-		if (key == 'D')
-			camera.Translate(float3(1, 0, 0));
-
-	}
+	void KeyDown( int key ) { /* implement if you want to handle keys */ }
 	void KeyPress();
 	// data members
 	int2 mousePos;
