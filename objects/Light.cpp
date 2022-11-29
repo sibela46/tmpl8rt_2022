@@ -13,7 +13,7 @@ float3 Light::GetPosition()
 
 float Light::GetEmission()
 {
-	return 1.0f;
+	return 2.0f;
 }
 
 float3 Light::GetColour()

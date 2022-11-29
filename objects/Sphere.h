@@ -7,6 +7,7 @@ public:
 
 	void	Intersect(Ray& ray) override;
 	float3	GetNormal(float3 I) override;
+
 public:
 	float radius = 0;
 };
