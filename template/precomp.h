@@ -849,10 +849,11 @@ inline int2 abs( const int2& v ) { return make_int2( abs( v.x ), abs( v.y ) ); }
 inline int3 abs( const int3& v ) { return make_int3( abs( v.x ), abs( v.y ), abs( v.z ) ); }
 inline int4 abs( const int4& v ) { return make_int4( abs( v.x ), abs( v.y ), abs( v.z ), abs( v.w ) ); }
 
+inline float mix(const float& a, const float& b, const float& mix) { return b * mix + a * (1 - mix); }
 inline float3 reflect( const float3 i, const float3 n ) { return i - 2.0f * n * dot( n, i ); }
 inline float3 refract(const float3& i, const float3& n, const float ior) { 
 	float cosi = clamp(-1.f, 1.f, dot(i, n));
-	float etai = 1, etat = ior;
+	float etai = 1.1, etat = ior;
 	float3 N = n;
 	if (cosi < 0) { cosi = -cosi; }
 	else { std::swap(etai, etat); N = -n; }
@@ -863,7 +864,7 @@ inline float3 refract(const float3& i, const float3& n, const float ior) {
 inline float fresnel(const float3& I, const float3& N, const float& ior)
 {
 	float cosi = clamp(-1.f, 1.f, dot(I, N));
-	float etai = 1, etat = ior;
+	float etai = 1.1, etat = ior;
 	if (cosi > 0) { std::swap(etai, etat); }
 	// Compute sini using Snell's law
 	float sint = etai / etat * sqrtf(std::max(0.f, 1 - cosi * cosi));
@@ -878,8 +879,6 @@ inline float fresnel(const float3& I, const float3& N, const float& ior)
 		float Rp = ((etai * cosi) - (etat * cost)) / ((etai * cosi) + (etat * cost));
 		return (Rs * Rs + Rp * Rp) / 2;
 	}
-	// As a consequence of the conservation of energy, transmittance is given by:
-	// kt = 1 - kr;
 }
 
 inline float3 cross( const float3& a, const float3& b ) { return make_float3( a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x ); }
@@ -1679,7 +1678,7 @@ public:
 };
 
 // Material structure
-enum class MaterialType { DIFFUSE = 0, GLASS = 1, MIRROR = 2 };
+enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2 };
 
 struct Material
 {
@@ -1687,6 +1686,7 @@ struct Material
 	MaterialType type;
 	float Kd;
 	float Ks;
+	float transparency;
 };
 
 #include "ray.h"

@@ -5,17 +5,19 @@
 // global settings and defines.
 
 // constants
-#define PI		3.14159265358979323846264f
+#define PI			3.14159265358979323846264f
+#define E			2.71828
 #define INVPI		0.31830988618379067153777f
 #define INV2PI		0.15915494309189533576888f
 #define TWOPI		6.28318530717958647692528f
 #define SQRT_PI_INV	0.56418958355f
 #define LARGE_FLOAT	1e34f
 #define EPSILON		0.0000001
+#define BLACK		float3(0, 0, 0)
 #define WHITE		float3(1, 1, 1)
-#define RED			float3(1, 0, 0)
-#define GREEN		float3(0, 1, 0)
-#define BLUE		float3(0, 0, 1)
+#define RED			float3(1.0, 0.1, 0.1)
+#define GREEN		float3(0.1, 1, 0.1)
+#define BLUE		float3(0.1, 0.1, 1)
 
 enum class ObjectType {
 	TRIANGLE = 0, SPHERE = 1, PLANE = 2, MESH = 3

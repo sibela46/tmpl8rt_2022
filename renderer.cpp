@@ -18,17 +18,19 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 30) return 0; // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 5) return 0; // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
 	/* visualize distance */ // return 0.1f * float3( ray.t, ray.t, ray.t );
 
 	float3 returnColour = 0;
+	float3 shade = 0;
 
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
-		returnColour += scene->GetAlbedo(ray.objIdx, I, N, ray.D) * scene->GetShade(ray.objIdx, I, N);
+		shade = scene->GetShade(ray.objIdx, I, N);
+		returnColour = scene->GetAlbedo(ray.objIdx, I, N, ray.D) * shade;
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
 	{
@@ -37,31 +39,43 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 		float3 reflVec = reflect(ray.D, N);
 		float3 reflRayOrigin = outside ? I + bias : I - bias;
-		Ray reflRay = Ray(reflRayOrigin, reflVec);
+		Ray reflRay = Ray(reflRayOrigin, normalize(reflVec));
 
-		returnColour += Trace(reflRay, depth + 1);
+		float3 reflectionColour = Trace(reflRay, depth + 1);
+
+		shade = float3(1);
+		returnColour = reflectionColour;
 	}
 	else if (ray.objMaterial.type == MaterialType::GLASS)
 	{
-		bool outside = dot(ray.D, N) < 0;
 		float3 bias = 0.001f * N;
-		float3 origin = outside ? I + bias : I - bias;
+		bool outside = dot(ray.D, N) < 0;
 
-		float3 reflVec = normalize(reflect(ray.D, N));
-		Ray reflRay = Ray(origin, reflVec);
+		float3 reflVec = reflect(ray.D, N);
+		float3 reflRayOrigin = outside ? I + bias : I - bias;
+		Ray reflRay = Ray(reflRayOrigin, normalize(reflVec));
+
 		float3 reflectionColour = Trace(reflRay, depth + 1);
 
-		float kr = fresnel(ray.D, N, 1.5f);
-		float3 refractionColour;
-		if (kr < 1) {
-			float3 refractionDirection = normalize(refract(ray.D, N, 1.5));
-			float3 refractionRayOrig = outside ? I - bias : I + bias;
-			Ray refrRay = Ray(refractionRayOrig, refractionDirection);
-			refractionColour = Trace(refrRay, depth + 1);
-		}
-		
+		float dDotn = -dot(ray.D, N);
+		float fresneleffect = fresnel(I, N, 1.5);
 
-		returnColour += kr * reflectionColour + (1 - kr) * refractionColour;
+		float3 refractionColour = 0;
+		if (ray.objMaterial.Ks > 0)
+		{
+			float ior = 1.1, eta = (outside) ? 1 / ior : ior;
+			float cosi = dDotn;
+			float k = 1 - eta * eta * (1 - cosi * cosi);
+			float3 refrdir = ray.D * eta + N * (eta * cosi - sqrt(k));
+			float3 refrRayOrigin = outside ? I - bias : I + bias;
+			Ray refrRay = Ray(refrRayOrigin, normalize(refrdir));
+			refractionColour = Trace(refrRay, depth + 1) * scene->GetBeersLaw(refrRay);
+		}
+
+		shade = float3(1);
+		returnColour = (fresneleffect * reflectionColour + 
+					   (1 - fresneleffect) * refractionColour * ray.objMaterial.Ks)
+					    * ray.objMaterial.colour;
 	}
 
 	return returnColour;
@@ -85,15 +99,13 @@ void Renderer::Tick( float deltaTime )
 		for (int x = 0; x < SCRWIDTH; x++)
 		{
 			Ray primaryRay = camera.GetPrimaryRay(x, y);
-			accumulator[x + y * SCRWIDTH] = float4(Trace(primaryRay, 0), 0);// +float4(Trace(primaryRay, 0), 0) + float4(Trace(primaryRay, 0), 0) + float4(Trace(primaryRay, 0), 0)) / 4;
+			accumulator[x + y * SCRWIDTH] = float4(Trace(primaryRay, 0), 0);
 		}
 		// translate accumulator contents to rgb32 pixels
 		for (int dest = y * SCRWIDTH, x = 0; x < SCRWIDTH; x++)
 			screen->pixels[dest + x] = 
 				RGBF32_to_RGB8( &accumulator[x + y * SCRWIDTH] );
 	}
-	
-	KeyPress();
 
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;
@@ -103,9 +115,45 @@ void Renderer::Tick( float deltaTime )
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
 }
 
-// -----------------------------------------------------------
-// Main loop for handling input
-// -----------------------------------------------------------
-void Renderer::KeyPress()
+void Renderer::KeyDown(int key)
 {
+	
+}
+
+void Renderer::MouseUp(int button)
+{
+	if (button == 0)
+		pressL = false;
+	if (button == 1)
+		pressR = false;
+}
+
+void Renderer::MouseDown(int button)
+{
+	if (button == 0)
+		pressL = true;
+	if (button == 1)
+		pressR = true;
+}
+
+void Renderer::MouseMove(int x, int y)
+{
+	mousePos.x = x, mousePos.y = y;
+	if (pressR)
+	{
+		camera.RotateX((y - prevY) * rotspeed);
+		camera.RotateY((x - prevX) * rotspeed);
+	}
+	if (pressL)
+	{
+		Ray primaryRay = camera.GetPrimaryRay(x, y);
+		float4 colour = float4(Trace(primaryRay, 0), 0);
+	}
+	prevX = x;
+	prevY = y;
+}
+
+void Renderer::MouseWheel(float z)
+{
+	camera.Translate(0, 0, z);
 }
