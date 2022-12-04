@@ -1,6 +1,6 @@
 #include "precomp.h"
 
-Triangle::Triangle(int id, float3 vertex1, float3 vertex2,float3 vertex3, Material m) : Object(id, vertex1, m)
+Triangle::Triangle(int id, const float3& vertex1, const float3& vertex2, const float3& vertex3, Material m) : Object(id, vertex1, m)
 {
 	v0 = vertex1, v1 = vertex2, v2 = vertex3;
 }
@@ -30,7 +30,7 @@ void Triangle::Intersect(Ray& ray)
 	return;
 }
 
-float3 Triangle::GetNormal(float3 I)
+float3 Triangle::GetNormal(const float3& I)
 {
 	float3 normal = normalize(cross(v1 - v0, v2 - v0));
 	return normal;

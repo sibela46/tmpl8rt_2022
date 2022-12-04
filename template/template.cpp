@@ -8,6 +8,9 @@
 #define STBI_NO_PIC
 #define STBI_NO_PNM
 #include "../lib/stb_image.h"
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../lib/stb_image_write.h"
 
 #pragma comment( linker, "/subsystem:windows /ENTRY:mainCRTStartup" )
 
@@ -75,6 +78,20 @@ void MousePosCallback(GLFWwindow* window, double x, double y)
 void ErrorCallback(int error, const char* description)
 {
 	fprintf(stderr, "GLFW Error: %s\n", description);
+}
+void SaveImage(char* filepath, GLFWwindow* w) {
+	int width, height;
+	glfwGetFramebufferSize(w, &width, &height);
+	GLsizei nrChannels = 3;
+	GLsizei stride = nrChannels * width;
+	stride += (stride % 4) ? (4 - stride % 4) : 0;
+	GLsizei bufferSize = stride * height;
+	std::vector<char> buffer(bufferSize);
+	glPixelStorei(GL_PACK_ALIGNMENT, 4);
+	glReadBuffer(GL_FRONT);
+	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer.data());
+	stbi_flip_vertically_on_write(true);
+	stbi_write_png(filepath, width, height, nrChannels, buffer.data(), stride);
 }
 
 // Application entry point
@@ -282,6 +299,7 @@ void main()
 		}
 		if (!running) break;
 	}
+	SaveImage("./render.png", window);
 	// close down
 	app->Shutdown();
 	Kernel::KillCL();

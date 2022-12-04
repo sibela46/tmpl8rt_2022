@@ -1678,7 +1678,7 @@ public:
 };
 
 // Material structure
-enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2 };
+enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
 
 struct Material
 {
@@ -1686,7 +1686,7 @@ struct Material
 	MaterialType type;
 	float Kd;
 	float Ks;
-	float transparency;
+	float emission;
 };
 
 #include "ray.h"

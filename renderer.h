@@ -9,6 +9,8 @@ namespace Tmpl8
 		// game flow methods
 		void Init();
 		float3 Trace(Ray& ray, int depth);
+		float3 TracePath(Ray& ray, int depth);
+		const float3& GenerateRandomVec(const float3& N);
 		void Tick(float deltaTime);
 		void Shutdown() { /* implement if you want to do something on exit */ }
 		// input handling
@@ -21,6 +23,7 @@ namespace Tmpl8
 	// data members
 	int2 mousePos;
 	float4* accumulator;
+	int accumulatorCounter = 0;
 	//Scene scene;
 	Scene* scene;
 	Camera camera;

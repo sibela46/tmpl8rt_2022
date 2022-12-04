@@ -1,12 +1,12 @@
 #include "precomp.h"
 
-Plane::Plane(int id, float3 n, float d, Material m) : Object(id, n, m)
+Plane::Plane(int id, const float3& n, float d, Material m) : Object(id, n, m)
 {
 	distance = d;
 	normal = n;
 }
 
-float3 Plane::GetNormal(float3 I)
+float3 Plane::GetNormal(const float3& I)
 {
 	return normal;
 }

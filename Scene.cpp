@@ -11,27 +11,30 @@ Material blueDiffuse = { BLUE,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material blueShiny = { BLUE,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { RED,  MaterialType::GLASS, 0.0, 1.0 };
+Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
+Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
-	sceneObjects.push_back(new Plane(0, float3(1, 0, 0), 4.f, redDiffuse)); // left wall
-	sceneObjects.push_back(new Plane(1, float3(-1, 0, 0), 4.f, greenDiffuse)); // right wall
-	sceneObjects.push_back(new Plane(2, float3(0, -1, 0), 2, whiteDiffuse)); // floor
-	sceneObjects.push_back(new Plane(3, float3(0, 1, 0), 1, whiteDiffuse)); // ceiling
-	sceneObjects.push_back(new Plane(4, float3(0, 0, 1), 10.f, whiteDiffuse)); // front wall
+	sceneObjects.push_back(new Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
+	sceneObjects.push_back(new Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
+	sceneObjects.push_back(new Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // floor
+	sceneObjects.push_back(new Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // ceiling
+	sceneObjects.push_back(new Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
 	sceneObjects.push_back(new Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	/*sceneObjects.push_back(new Sphere(6, float3(-2.0f, 0.f, -0.5f), 1.0f, glass));
-	sceneObjects.push_back(new Sphere(7, float3(0.0f, 0.f, -0.5f), 0.6f, glass));
-	sceneObjects.push_back(new Sphere(8, float3(1.5f, 0.f, -0.5f), 0.3f, glass));
-	sceneObjects.push_back(new Sphere(9, float3(2.5f, 0.f, -0.5f), 0.1f, glass));*/
-
-	//sceneObjects.push_back(new Triangle(6, float3(0, 0, -0.2f), float3(0.5, 0.0, -0.2f), float3(0.0, 0.5, 0.0), blueDiffuse));
+	sceneObjects.push_back(new Triangle(6, float3(-0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, -1.0f), float3(0.5, 0.8f, 0.0f), areaLight));
+	sceneObjects.push_back(new Triangle(7, float3(-0.5f, 0.8f, 0.0f), float3(-0.5f, 0.8f, -1.0f), float3(0.5, 0.8f, 0.0f), areaLight));
 	
-	LoadModel(6, "", whiteDiffuse, 0.f);
+	sceneObjects.push_back(new Sphere(8, float3(-1.0f, -0.5f, 0.f), 0.5f, whiteDiffuse));
+	sceneObjects.push_back(new Sphere(9, float3(0.0f, -0.5f, 0.f), 0.5f, redDiffuse));
+	sceneObjects.push_back(new Sphere(10, float3(1.0f, -0.5f, 0.f), 0.5f, glass));
 
-	light = new Light(float3(0.f, 0.8f, -2.0f));
+	//sceneObjects.push_back(new Triangle(8, float3(3.0f, 0.8f, -3.0f), float3(3.0f, 0.8f, 0.0f), float3(0.0, 0.8f, 0.0f), whiteDiffuse));
+	
+	//LoadModel(6, "", whiteDiffuse, 0.f);
+
+	//light = new Light(float3(0.f, 0.8f, -2.0f));
 }
 
 void Scene::FindNearest(Ray& ray)
@@ -47,7 +50,7 @@ void Scene::FindNearest(Ray& ray)
 	}
 }
 
-bool Scene::IsOccluded(float3 I, float3 N)
+bool Scene::IsOccluded(const float3& I, const float3& N)
 {
 	float3 bias = 0.001f * N;
 	float3 dirToLight = (light->position - I);
@@ -57,7 +60,7 @@ bool Scene::IsOccluded(float3 I, float3 N)
 	return rayToLight.t < length(dirToLight);
 }
 
-float3 Scene::GetNormal(int idx, float3 I, float3 D)
+float3 Scene::GetNormal(int idx, const float3& I, const float3& D)
 {
 	float3 N = sceneObjects[idx]->GetNormal(I);
 
@@ -65,13 +68,13 @@ float3 Scene::GetNormal(int idx, float3 I, float3 D)
 	return N;
 }
 
-float3 Scene::GetShade(int idx, float3 I, float3 N)
+float3 Scene::GetShade(int idx, const float3& I, const float3& N)
 {
 	if (IsOccluded(I, N)) return 0;
 	return sceneObjects[idx]->GetDirectLight(light, I, N) + sceneObjects[idx]->GetIndirectLight(light, I, N);
 }
 
-float3 Scene::GetAlbedo(int idx, float3 I, float3 N, float3 D)
+float3 Scene::GetAlbedo(int idx, const float3& I, const float3& N, const float3& D)
 {
 	return sceneObjects[idx]->GetAlbedo(light, I, N, D);
 }
@@ -90,7 +93,7 @@ float3 Scene::GetBeersLaw(Ray& ray)
 	return 1;
 }
 
-void Scene::LoadModel(int idx, const char* fileName, Material material, float3 offset)
+void Scene::LoadModel(int idx, const char* fileName, Material material, const float3& offset)
 {
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 	std::vector<float3> temp_vertices;

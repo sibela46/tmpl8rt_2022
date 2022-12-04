@@ -1,11 +1,11 @@
 #include "precomp.h"
 
-Sphere::Sphere(int id, float3 p, float r, Material m) : Object(id, p, m)
+Sphere::Sphere(int id, const float3& p, float r, Material m) : Object(id, p, m)
 {
 	radius = r;
 }
 
-float3 Sphere::GetNormal(float3 I)
+float3 Sphere::GetNormal(const float3& I)
 {
 	return normalize(I - position);
 }
