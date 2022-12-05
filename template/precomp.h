@@ -88,6 +88,18 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+// STB
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_PSD
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#include "../lib/stb_image.h"
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../lib/stb_image_write.h"
+
+#define WITTED_STYLE // comment out for path tracing
+
 // zlib
 #include "zlib.h"
 
@@ -1679,6 +1691,7 @@ public:
 
 // Material structure
 enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
+enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2 };
 
 struct Material
 {
@@ -1695,6 +1708,7 @@ struct Material
 #include "objects/Sphere.h"
 #include "objects/Plane.h"
 #include "objects/Light.h"
+#include "Texture.h"
 #include "Scene.h"
 #include "camera.h"
 #include "renderer.h"

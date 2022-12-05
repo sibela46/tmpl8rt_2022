@@ -9,8 +9,8 @@ namespace Tmpl8
 		// game flow methods
 		void Init();
 		float3 Trace(Ray& ray, int depth);
-		float3 TracePath(Ray& ray, int depth);
 		const float3& GenerateRandomVec(const float3& N);
+		const float3& GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
 		void Tick(float deltaTime);
 		void Shutdown() { /* implement if you want to do something on exit */ }
 		// input handling

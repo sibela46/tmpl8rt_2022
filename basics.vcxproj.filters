@@ -21,6 +21,7 @@
     <ClCompile Include="objects\Light.cpp">
       <Filter>objects</Filter>
     </ClCompile>
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -50,6 +51,7 @@
     <ClInclude Include="objects\Light.h">
       <Filter>objects</Filter>
     </ClInclude>
+    <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
@@ -63,6 +65,7 @@
     <None Include="template\LICENSE">
       <Filter>template</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="template\bunny.obj">

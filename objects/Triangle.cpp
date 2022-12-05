@@ -1,8 +1,10 @@
 #include "precomp.h"
 
-Triangle::Triangle(int id, const float3& vertex1, const float3& vertex2, const float3& vertex3, Material m) : Object(id, vertex1, m)
+Triangle::Triangle(int id, const float4& vertex1, const float4& vertex2, const float4& vertex3, Material m)
 {
 	v0 = vertex1, v1 = vertex2, v2 = vertex3;
+	material = m;
+	index = id;
 }
 
 void Triangle::Intersect(Ray& ray)
@@ -25,6 +27,7 @@ void Triangle::Intersect(Ray& ray)
 		ray.t = t;
 		ray.objIdx = index;
 		ray.objMaterial = material;
+		ray.objType = ObjectType::TRIANGLE;
 		return;
 	}
 	return;
@@ -34,5 +37,21 @@ float3 Triangle::GetNormal(const float3& I)
 {
 	float3 normal = normalize(cross(v1 - v0, v2 - v0));
 	return normal;
+}
+
+float3 Triangle::GetDirectLight(Light* light, const float3& I, const float3& N)
+{
+	float3 dirToLight = (light->GetPosition() - I);
+	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
+	return light->GetEmission() * light->GetColour() * dotProduct * (1 / PI);
+}
+
+float3 Triangle::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
+{
+	float3 distToLight = normalize(light->position - I);
+	float A = 4 * PI * dot(distToLight, distToLight);
+	float3 B = light->GetColour() / A;
+	float3 reflected = normalize(reflect(-distToLight, N));
+	return pow(-dot(reflected, D), 20.0f);
 }
 

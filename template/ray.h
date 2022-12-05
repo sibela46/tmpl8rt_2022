@@ -32,6 +32,7 @@ public:
 	int objIdx = -1;
 	bool inside = false; // true when in medium
 	Material objMaterial;
+	ObjectType objType;
 };
 
 }

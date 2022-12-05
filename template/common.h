@@ -21,10 +21,6 @@
 #define BLUE		float3(0.1, 0.1, 1)
 #define LIGHTEMMIS	1.f
 
-enum class ObjectType {
-	TRIANGLE = 0, SPHERE = 1, PLANE = 2, MESH = 3
-};
-
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:
 // Without a GPU, a laptop needs at least a 'Broadwell' Intel CPU (5th gen, 2015):
 // Intel's OpenCL implementation 'NEO' is not available on older devices.
