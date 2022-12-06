@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 5) return 0; // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 5) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, ray.objType, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -27,24 +27,24 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
 #ifdef WITTED_STYLE
-		return ray.objMaterial.colour * scene->GetShade(ray.objIdx, ray.objType, I, N);
+		return scene->GetAlbedo(ray, N) * scene->GetShade(ray.objIdx, ray.objType, I, N);
 #else
 		float3 bias = 0.001f * N;
-		bool outside = dot(ray.D, N) < 0;
-		float3 rayOrigin = outside ? I + bias : I - bias;
+		//bool outside = dot(ray.D, N) < 0;
+		float3 rayOrigin = I + bias;
 
 		float3 illumination = 0;
-		for (int i = 0; i < 3; ++i)
+		for (int i = 0; i < 2; ++i)
 		{
-			float3 randomUnitVec = GenerateRandomVec(N);
+			float3 randomUnitVec = normalize(SampleHemisphere(N));
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
 			float3 incoming = Trace(newRay, depth + 1);
-			float3 BRDF = ray.objMaterial.colour; // this should be divided by PI
+			float3 BRDF = scene->GetAlbedo(ray, N); // this should be divided by PI
 			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
 			illumination += 2.f * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
 		}
 
-		return illumination / 3;
+		return illumination / 2;
 #endif
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
@@ -98,7 +98,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	return 0;
 }
 
-const float3& Renderer::GenerateRandomVec(const float3& N)
+float3 Renderer::SampleHemisphere(const float3& N)
 {
 	float r1 = RandomFloat();
 	float r2 = RandomFloat();
@@ -111,7 +111,18 @@ const float3& Renderer::GenerateRandomVec(const float3& N)
 	return randomVec;
 }
 
-const float3& Renderer::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
+float3 Renderer::GenerateRandomVec(const float3& N)
+{
+	float r1 = RandomFloat();
+	float r2 = RandomFloat();
+	float r3 = RandomFloat();
+	float3 randomVec = float3(r1, r2, r3);
+
+	return randomVec;
+}
+
+
+float3 Renderer::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
 {
 	float3 distToLight = normalize(light->position - I);
 	float A = 4 * PI * dot(distToLight, distToLight);
@@ -152,11 +163,11 @@ void Renderer::Tick( float deltaTime )
 	}
 
 	// performance report - running average - ms, MRays/s
-	/*static float avg = 10, alpha = 1;
+	static float avg = 10, alpha = 1;
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
 	if (alpha > 0.05f) alpha *= 0.5f;
 	float fps = 1000 / avg, rps = (SCRWIDTH * SCRHEIGHT) * fps;
-	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );*/
+	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
 }
 
 void Renderer::KeyDown(int key)

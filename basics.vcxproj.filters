@@ -21,11 +21,10 @@
     <ClCompile Include="objects\Light.cpp">
       <Filter>objects</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="objects\Torus.cpp">
       <Filter>objects</Filter>
     </ClCompile>
-    <ClCompile Include="objects\Cylinder.cpp">
+    <ClCompile Include="objects\Cube.cpp">
       <Filter>objects</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,11 +56,10 @@
     <ClInclude Include="objects\Light.h">
       <Filter>objects</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h" />
     <ClInclude Include="objects\Torus.h">
       <Filter>objects</Filter>
     </ClInclude>
-    <ClInclude Include="objects\Cylinder.h">
+    <ClInclude Include="objects\Cube.h">
       <Filter>objects</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,11 +1,12 @@
 #include "precomp.h"
 
-Sphere::Sphere(int id, const float3& p, float r, Material m)
+Sphere::Sphere(int id, const float3& p, float r, Material m, TextureMap* t)
 {
 	index = id;
 	radius = r;
 	position = p;
 	material = m;
+	texture = t;
 }
 
 float3 Sphere::GetNormal(const float3& I)
@@ -23,34 +24,35 @@ void Sphere::Intersect(Ray& ray)
 	d = sqrtf(d), t = -b - d;
 	if (t < ray.t && t > 0)
 	{
+		float3 I = ray.O + t * ray.D;
+		float3 normal = GetNormal(I);
+		double u = 0.5 - atan2(normal.z, normal.x) * (1/PI);
+		double v = 0.5 - asin(normal.y) * (1/PI);
+		uvCoords = float2(u, v);
 		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE;
 		return;
 	}
 	t = d - b;
 	if (t < ray.t && t > 0)
 	{
+		float3 I = ray.O + t * ray.D;
+		float3 normal = GetNormal(I);
+		double u = 0.5 - atan2(normal.z, normal.x) * (1 / PI);
+		double v = 0.5 - asin(normal.y) * (1 / PI);
+		uvCoords = float2(u, v);
 		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE;
 		return;
 	}
 }
 
-float3 Sphere::GetDirectLight(Light* light, const float3& I, const float3& N)
+float3 Sphere::GetTexture(const float3& I, const float3& N)
 {
-	float3 dirToLight = (light->GetPosition() - I);
-	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
-	return light->GetEmission() * light->GetColour() * dotProduct * (1 / PI);
-}
+	if (texture == nullptr) return material.colour;
 
-float3 Sphere::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	float3 distToLight = normalize(light->position - I);
-	float A = 4 * PI * dot(distToLight, distToLight);
-	float3 B = light->GetColour() / A;
-	float3 reflected = normalize(reflect(-distToLight, N));
-	return pow(-dot(reflected, D), 20.0f);
-}
+	auto phi = atan2(-N.z, N.x) + PI;
+	auto theta = acos(-N.y);
 
-float3 Sphere::GetAlbedo(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	return material.colour * material.Kd + material.Ks * GetSpecularColour(light, I, N, D);
+	float u = phi / (2 * PI);
+	float v = theta / PI;
+	return texture->GetColourAt(u, v);
 }

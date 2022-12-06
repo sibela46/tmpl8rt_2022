@@ -88,17 +88,8 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-// STB
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_NO_PSD
-#define STBI_NO_PIC
-#define STBI_NO_PNM
-#include "../lib/stb_image.h"
-#define STBI_MSC_SECURE_CRT
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../lib/stb_image_write.h"
-
-#define WITTED_STYLE // comment out for path tracing
+//#define WITTED_STYLE // comment out for path tracing
+#define TEXTURING // uncomment to enable textures
 
 // zlib
 #include "zlib.h"
@@ -340,6 +331,28 @@ private:
 	uint vertex = 0;	// vertex shader identifier
 	uint pixel = 0;		// fragment shader identifier
 	uint ID = 0;		// shader program identifier
+};
+
+// texture mapping
+class mat4;
+class TextureMap
+{
+const static int bytesPerPixel = 3;
+
+public:
+	// constructor / destructor
+	TextureMap(const char* file);
+	~TextureMap();
+	// methods
+	float3 GetColourAt(float u, float v);
+	void LoadTextureImage(const std::string& filename);
+
+private:
+	// data members
+	unsigned char* data;
+	int imageWidth = 0;
+	int imageHeight = 0;
+	int bytesPerLine = 0;
 };
 
 // generic error checking for OpenGL code
@@ -1691,7 +1704,7 @@ public:
 
 // Material structure
 enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
-enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2 , TORUS = 3, CYLINDER = 4};
+enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, TORUS = 4 };
 
 struct Material
 {
@@ -1707,10 +1720,9 @@ struct Material
 #include "objects/Triangle.h"
 #include "objects/Sphere.h"
 #include "objects/Torus.h"
-#include "objects/Cylinder.h"
 #include "objects/Plane.h"
 #include "objects/Light.h"
-#include "Texture.h"
+#include "objects/Cube.h"
 #include "Scene.h"
 #include "camera.h"
 #include "renderer.h"

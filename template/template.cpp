@@ -3,6 +3,15 @@
 
 #include "precomp.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_PSD
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+#include "../lib/stb_image.h"
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "../lib/stb_image_write.h"
+
 #pragma comment( linker, "/subsystem:windows /ENTRY:mainCRTStartup" )
 
 using namespace Tmpl8;
@@ -25,6 +34,7 @@ extern "C"
 static GLFWwindow* window = 0;
 static bool hasFocus = true, running = true;
 static GLTexture* renderTarget = 0;
+static GLTexture* imageTexture = 0;
 static int scrwidth = 0, scrheight = 0;
 static TheApp* app = 0;
 
@@ -40,6 +50,7 @@ void InitRenderTarget(int w, int h)
 	// allocate render target and surface
 	scrwidth = w, scrheight = h;
 	renderTarget = new GLTexture(scrwidth, scrheight, GLTexture::INTTARGET);
+	imageTexture = new GLTexture(scrwidth, scrheight, GLTexture::DEFAULT);
 }
 void ReshapeWindowCallback(GLFWwindow* window, int w, int h)
 {
@@ -675,6 +686,53 @@ void Shader::SetUInt(const char* name, const uint v)
 {
 	glUniform1ui(glGetUniformLocation(ID, name), v);
 	CheckGL();
+}
+
+TextureMap::TextureMap(const char* file)
+{
+	char cCurrentPath[FILENAME_MAX];
+	if (!_getcwd(cCurrentPath, sizeof(cCurrentPath)))
+	{
+		printf("Cannot get current directory!\n");
+	}
+	std::string fileName = cCurrentPath + string(file);
+	LoadTextureImage(fileName);
+}
+
+TextureMap::~TextureMap()
+{
+	stbi_image_free(data);
+}
+
+void TextureMap::LoadTextureImage(const std::string& filename)
+{
+	int n = bytesPerPixel;
+	data = stbi_load(filename.c_str(), &imageWidth, &imageHeight, &n, n);
+	if (data == nullptr)
+	{
+		imageWidth = 0;
+		imageHeight = 0;
+		std::cout << "Error loading the texture\n";
+	}
+	bytesPerLine = imageWidth * bytesPerPixel;
+}
+
+float3 TextureMap::GetColourAt(float u, float v)
+{	
+	if (data == nullptr) return float3(0, 1, 1);
+
+	u = glm::clamp(u, 0.0f, 1.0f);
+	v = 1 - glm::clamp(v, 0.0f, 1.0f);
+
+	int x = static_cast<int>(u * imageWidth);
+	int y = static_cast<int>(v * imageHeight);
+
+	if (x >= imageWidth) x = imageWidth - 1;
+	if (y >= imageHeight) y = imageHeight - 1;
+
+	const float colourScale = 1.f / 255.f;
+	auto pixelOffset = data + bytesPerLine * y + bytesPerPixel * x;
+	return float3(pixelOffset[0]*colourScale, pixelOffset[1]*colourScale, pixelOffset[2]*colourScale);
 }
 
 // RNG - Marsaglia's xor32
