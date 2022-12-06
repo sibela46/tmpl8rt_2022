@@ -23,21 +23,26 @@ Scene::Scene()
 	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
-	
+
+	//tori.emplace_back(Torus(0, float3(-0.f, -0.5f, 0.f), 0.5f, 0.1f, redDiffuse));
+	//cylinders.emplace_back(Cylinder(0, float3(-0.f, -0.5f, 0.f), 0.5f, 0.3f, 0.1f, redDiffuse));
+
 	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
 	spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, whiteDiffuse));
 	spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse));
 	spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
 
-	//sceneObjects.push_back(new Triangle(8, float3(3.0f, 0.8f, -3.0f), float3(3.0f, 0.8f, 0.0f), float3(0.0, 0.8f, 0.0f), whiteDiffuse));
+	//triangles.emplace_back(new Triangle(0, float3(3.0f, 0.8f, -3.0f), float3(3.0f, 0.8f, 0.0f), float3(0.0, 0.8f, 0.0f), whiteDiffuse));
 	
-	//LoadModel(0, "", whiteDiffuse, float3(0.f, -1.5f, 0.f), 0.5f);
+	//LoadModel(0, "Square.obj", redDiffuse, float3(0, 1, 0), 0.1f);
+	//LoadModel(0, "elephav.obj", redDiffuse, float3(0, 1, 0), 0.001f);
 
 #ifdef WITTED_STYLE
 	light = new Light(float3(0.f, 0.8f, 0.0f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, -1.0f), float3(0.5, 0.8f, 0.0f), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-0.5f, 0.8f, 0.0f), float3(-0.5f, 0.8f, -1.0f), float3(0.5, 0.8f, 0.0f), areaLight));
+	//planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, areaLight)); // ceiling
+	triangles.emplace_back(Triangle(0, float3(-2.f, 0.8f, -4.0f), float3(2.f, 0.8f, -4.0f), float3(2.f, 0.8f, 0.0f), areaLight));
+	triangles.emplace_back(Triangle(1, float3(-2.f, 0.8f, 0.0f), float3(-2.f, 0.8f, -4.0f), float3(2.f, 0.8f, 0.0f), areaLight));
 #endif
 
 }
@@ -60,6 +65,14 @@ void Scene::FindNearest(Ray& ray)
 	for (int i = 0; i < planes.size(); ++i)
 	{
 		planes[i].Intersect(ray);
+	}
+	for (int i = 0; i < tori.size(); ++i)
+	{
+		tori[i].Intersect(ray);
+	}
+	for (int i = 0; i < cylinders.size(); ++i)
+	{
+		cylinders[i].Intersect(ray);
 	}
 }
 
@@ -88,6 +101,14 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	{
 		N = spheres[idx].GetNormal(I);
 	}
+	else if (type == ObjectType::TORUS)
+	{
+		N = tori[idx].GetNormal(I);
+	}
+	else if (type == ObjectType::CYLINDER)
+	{
+		N = cylinders[idx].GetNormal(I);
+	}
 	if (dot(N, D) > 0) N = -N; // hit backside / inside
 	return N;
 }
@@ -98,6 +119,8 @@ float3 Scene::GetShade(int idx, ObjectType type, const float3& I, const float3& 
 	if (type == ObjectType::PLANE) return planes[idx].GetDirectLight(light, I, N);
 	if (type == ObjectType::TRIANGLE) return triangles[idx].GetDirectLight(light, I, N);
 	if (type == ObjectType::SPHERE) return spheres[idx].GetDirectLight(light, I, N);
+	if (type == ObjectType::TORUS) return tori[idx].GetDirectLight(light, I, N);
+	if (type == ObjectType::CYLINDER) return cylinders[idx].GetDirectLight(light, I, N);
 	return 0;
 }
 
@@ -131,7 +154,7 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 		return;
 	}
 
-	FILE* file = fopen((string(cCurrentPath) + string("\\template\\bunny.obj")).c_str(), "r");
+	FILE* file = fopen((string(cCurrentPath) + string("\\assets\\" + string(fileName))).c_str(), "r");
 	if (file == NULL) {
 		printf("Impossible to open the file!\n");
 		return;
@@ -157,12 +180,32 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 		else if (strcmp(lineHeader, "f") == 0)
 		{
 			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], normalIndex[3];
-			int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
-			if (matches != 6) {
-				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-				return;
+			unsigned int vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+			char stupidBuffer[1024];
+			fgets(stupidBuffer, 1024, file);
+			int matches = sscanf(stupidBuffer, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+				matches = sscanf(stupidBuffer, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				if (matches != 6) {
+					vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+					matches = sscanf(stupidBuffer, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
+					if (matches != 3) {
+						printf("File can't be read \n");
+						fclose(file);
+						return ;
+					}
+				}
 			}
+			/*
+			triangles.emplace_back(Triangle(idx, 
+				float4(temp_vertices[vertexIndex[0]].x, temp_vertices[vertexIndex[0]].y, temp_vertices[vertexIndex[0]].z, 1.f) * transform * scale,
+				float4(temp_vertices[vertexIndex[1]].x, temp_vertices[vertexIndex[1]].y, temp_vertices[vertexIndex[1]].z, 1.f) * transform * scale,
+				float4(temp_vertices[vertexIndex[2]].x, temp_vertices[vertexIndex[2]].y, temp_vertices[vertexIndex[2]].z, 1.f) * transform * scale,
+				material));
+			idx += 1;
+			*/
+
 			vertexIndices.push_back(vertexIndex[0]);
 			vertexIndices.push_back(vertexIndex[1]);
 			vertexIndices.push_back(vertexIndex[2]);

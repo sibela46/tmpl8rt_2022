@@ -22,6 +22,12 @@
       <Filter>objects</Filter>
     </ClCompile>
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="objects\Torus.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
+    <ClCompile Include="objects\Cylinder.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -52,6 +58,12 @@
       <Filter>objects</Filter>
     </ClInclude>
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="objects\Torus.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\Cylinder.h">
+      <Filter>objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">

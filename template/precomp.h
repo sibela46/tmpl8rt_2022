@@ -1691,7 +1691,7 @@ public:
 
 // Material structure
 enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
-enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2 };
+enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2 , TORUS = 3, CYLINDER = 4};
 
 struct Material
 {
@@ -1706,6 +1706,8 @@ struct Material
 #include "objects/Object.h"
 #include "objects/Triangle.h"
 #include "objects/Sphere.h"
+#include "objects/Torus.h"
+#include "objects/Cylinder.h"
 #include "objects/Plane.h"
 #include "objects/Light.h"
 #include "Texture.h"

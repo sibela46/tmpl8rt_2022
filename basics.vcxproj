@@ -122,10 +122,12 @@
   </ItemDefinitionGroup>
   <!-- END Custom section -->
   <ItemGroup>
+    <ClCompile Include="objects\Cylinder.cpp" />
     <ClCompile Include="objects\Light.cpp" />
     <ClCompile Include="objects\Object.cpp" />
     <ClCompile Include="objects\Plane.cpp" />
     <ClCompile Include="objects\Sphere.cpp" />
+    <ClCompile Include="objects\Torus.cpp" />
     <ClCompile Include="objects\Triangle.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -137,10 +139,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="objects\Cylinder.h" />
     <ClInclude Include="objects\Light.h" />
     <ClInclude Include="objects\Object.h" />
     <ClInclude Include="objects\Plane.h" />
     <ClInclude Include="objects\Sphere.h" />
+    <ClInclude Include="objects\Torus.h" />
     <ClInclude Include="objects\Triangle.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="Scene.h" />
