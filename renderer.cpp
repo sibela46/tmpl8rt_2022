@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 5) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 5) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, ray.objType, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -39,7 +39,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 			float3 randomUnitVec = normalize(SampleHemisphere(N));
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
 			float3 incoming = Trace(newRay, depth + 1);
-			float3 BRDF = scene->GetAlbedo(ray, N); // this should be divided by PI
+			float3 BRDF = scene->GetTexture(ray, N); // this should be divided by PI
 			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
 			illumination += 2.f * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
 		}

@@ -6,7 +6,7 @@ Sphere::Sphere(int id, const float3& p, float r, Material m)
 	radius = r;
 	position = p;
 	material = m;
-	texture = new TextureMap("\\checker.png");
+	texture = new TextureMap("\\assets\\earth.jpg");
 }
 
 float3 Sphere::GetNormal(const float3& I)

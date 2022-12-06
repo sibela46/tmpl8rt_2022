@@ -6,6 +6,7 @@ Plane::Plane(int id, const float3& n, float d, Material m)
 	normal = n;
 	index = id;
 	material = m;
+	texture = new TextureMap("\\assets\\earth.jpg");
 }
 
 float3 Plane::GetNormal(const float3& I)
@@ -35,4 +36,11 @@ float3 Plane::GetUVCoords()
 	float3 c = cross(normal, float3(0, 0, 1));
 
 	return normalize(dot(max_ab, max_ab) < dot(c, c) ? c : max_ab);
+}
+
+float3 Plane::GetTexture(const float3& I, const float3& N)
+{
+	float3 u = GetUVCoords();
+	float3 v = cross(N, GetUVCoords());
+	return texture->GetColourAt(dot(u, I), dot(v, I));
 }

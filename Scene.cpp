@@ -11,7 +11,7 @@ Material blueDiffuse = { BLUE,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material blueShiny = { BLUE,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
+Material glass = { WHITE,  MaterialType::GLASS, 1.0, 1.0 };
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
@@ -19,12 +19,12 @@ Scene::Scene()
 	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
 	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
 	//planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
-	//planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	planes.emplace_back(Plane(0, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
 	//planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
 	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	//
 	//spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
-	spheres.emplace_back(Sphere(0, float3(-0.3f, -0.5f, 0.f), 0.3f, glass));
+	spheres.emplace_back(Sphere(0, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
 	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse));
 	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
 	
@@ -62,6 +62,10 @@ void Scene::FindNearest(Ray& ray)
 	{
 		planes[i].Intersect(ray);
 	}
+	for (int i = 0; i < tori.size(); ++i)
+	{
+		tori[i].Intersect(ray);
+	}
 }
 
 bool Scene::IsOccluded(const float3& I, const float3& N)
@@ -76,7 +80,7 @@ bool Scene::IsOccluded(const float3& I, const float3& N)
 
 float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3& D)
 {
-	float3 N;
+	float3 N = 0;
 	if (type == ObjectType::PLANE)
 	{
 		N = planes[idx].GetNormal(I);
@@ -88,6 +92,10 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	else if (type == ObjectType::SPHERE)
 	{
 		N = spheres[idx].GetNormal(I);
+	}
+	else if (type == ObjectType::TORUS)
+	{
+		N = tori[idx].GetNormal(I);
 	}
 	if (dot(N, D) > 0) N = -N; // hit backside / inside
 	return N;
@@ -131,7 +139,7 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 		return;
 	}
 
-	FILE* file = fopen((string(cCurrentPath) + string("\\template\\bunny.obj")).c_str(), "r");
+	FILE* file = fopen((string(cCurrentPath) + string("\\assets\\" + string(fileName))).c_str(), "r");
 	if (file == NULL) {
 		printf("Impossible to open the file!\n");
 		return;
@@ -157,11 +165,22 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 		else if (strcmp(lineHeader, "f") == 0)
 		{
 			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], normalIndex[3];
-			int matches = fscanf(file, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
-			if (matches != 6) {
-				printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-				return;
+			unsigned int vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+			char stupidBuffer[1024];
+			fgets(stupidBuffer, 1024, file);
+			int matches = sscanf(stupidBuffer, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+			if (matches != 9) {
+				vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+				matches = sscanf(stupidBuffer, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
+				if (matches != 6) {
+					vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+					matches = sscanf(stupidBuffer, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
+					if (matches != 3) {
+						printf("File can't be read \n");
+						fclose(file);
+						return ;
+					}
+				}
 			}
 			vertexIndices.push_back(vertexIndex[0]);
 			vertexIndices.push_back(vertexIndex[1]);
@@ -208,17 +227,16 @@ float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& 
 #endif
 }
 
-float3 Scene::GetAlbedo(const Ray& ray, const float3& N)
+float3 Scene::GetAlbedo(Ray& ray, const float3& N)
 {
-	float3 I = ray.O + ray.t * ray.D;
-	return ray.objMaterial.colour * ray.objMaterial.Kd + ray.objMaterial.Ks * GetSpecularColour(I, N, ray.D);
+	return ray.objMaterial.colour *ray.objMaterial.Kd +ray.objMaterial.Ks * GetSpecularColour(ray.IntersectionPoint(), N, ray.D);
 }
 
-float3 Scene::GetTexture(const Ray& ray)
+float3 Scene::GetTexture(Ray& ray, const float3& N)
 {
-	float3 I = ray.O + ray.t * ray.D;
-	if (ray.objType == ObjectType::SPHERE) return spheres[0].GetTexture(I, ray.D);
-	return 0;
+	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	//if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	return GetAlbedo(ray, N);
 }
 
 float3 Scene::GetSkydomeTexture(const Ray& ray)

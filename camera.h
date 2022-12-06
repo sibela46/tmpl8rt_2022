@@ -32,9 +32,13 @@ public:
 	}
 	Ray GetPrimaryRay( const int x, const int y )
 	{
+		// anti-aliasing
+		float X = x + RandomFloat() - 0.5;
+		float Y = y + RandomFloat() - 0.5;
+
 		// calculate pixel position on virtual screen plane
-		const float u = (float)x * (1.0f / SCRWIDTH);
-		const float v = (float)y * (1.0f / SCRHEIGHT);
+		const float u = X * (1.0f / SCRWIDTH);
+		const float v = Y * (1.0f / SCRHEIGHT);
 		const float3 P = topLeft + u * (topRight - topLeft) + v * (bottomLeft - topLeft);
 		return Ray( camPos, normalize( P - camPos ) );
 	}
