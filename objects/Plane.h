@@ -3,7 +3,7 @@
 class Plane
 {
 public:
-	Plane(int id, const float3& p, float r, Material m);
+	Plane(int id, const float3& p, float r, Material m, TextureMap* t = nullptr);
 
 	void	Intersect(Ray& ray);
 	float3	GetNormal(const float3& I);

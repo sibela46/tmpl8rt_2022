@@ -16,20 +16,22 @@ Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
-	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
-	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
-	//planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(0, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	//planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
-	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
-	//
-	//spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
-	spheres.emplace_back(Sphere(0, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
-	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse));
-	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
+	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
+	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
+	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
+	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
+	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
+	
+	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
+	spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
+	spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
+	spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
 	
 	//triangles.emplace_back(Triangle(0, float3(0.0f, 0.0f, 0.0f), float3(0.0f, 1.0f, 0.0f), float3(1.0, 1.0f, 0.0f), blueDiffuse));
 	
+	cubes.emplace_back(Cube(0, float3(0), float3(0.5f), whiteDiffuse, mat4::Translate(-1.0f, -0.75f, 0.5f)));
+
 	//LoadModel(0, "", whiteDiffuse, float3(0.f, -1.5f, 0.f), 0.5f);
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
@@ -62,6 +64,10 @@ void Scene::FindNearest(Ray& ray)
 	{
 		planes[i].Intersect(ray);
 	}
+	for (int i = 0; i < cubes.size(); ++i)
+	{
+		cubes[i].Intersect(ray);
+	}
 	for (int i = 0; i < tori.size(); ++i)
 	{
 		tori[i].Intersect(ray);
@@ -92,6 +98,10 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	else if (type == ObjectType::SPHERE)
 	{
 		N = spheres[idx].GetNormal(I);
+	}
+	else if (type == ObjectType::CUBE)
+	{
+		N = cubes[idx].GetNormal(I);
 	}
 	else if (type == ObjectType::TORUS)
 	{
@@ -229,14 +239,20 @@ float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& 
 
 float3 Scene::GetAlbedo(Ray& ray, const float3& N)
 {
-	return ray.objMaterial.colour *ray.objMaterial.Kd +ray.objMaterial.Ks * GetSpecularColour(ray.IntersectionPoint(), N, ray.D);
+#ifdef TEXTURING
+	return GetTexture(ray, N);
+#else
+	if (ray.objMaterial.type == MaterialType::GLASS) return ray.objMaterial.colour;
+	return ray.objMaterial.colour *ray.objMaterial.Kd + ray.objMaterial.Ks * GetSpecularColour(ray.IntersectionPoint(), N, ray.D);
+#endif
 }
 
 float3 Scene::GetTexture(Ray& ray, const float3& N)
 {
 	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	//if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	return GetAlbedo(ray, N);
+	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	if (ray.objType == ObjectType::CUBE) return cubes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	return (0, 1, 0);
 }
 
 float3 Scene::GetSkydomeTexture(const Ray& ray)

@@ -22,6 +22,7 @@ public:
 	std::vector<Triangle> triangles;
 	std::vector<Plane> planes;
 	std::vector<Sphere> spheres;
+	std::vector<Cube> cubes;
 	std::vector<Torus> tori;
 	Light* light;
 	TextureMap* skydomeTexture;

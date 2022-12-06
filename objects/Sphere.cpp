@@ -1,12 +1,12 @@
 #include "precomp.h"
 
-Sphere::Sphere(int id, const float3& p, float r, Material m)
+Sphere::Sphere(int id, const float3& p, float r, Material m, TextureMap* t)
 {
 	index = id;
 	radius = r;
 	position = p;
 	material = m;
-	texture = new TextureMap("\\assets\\earth.jpg");
+	texture = t;
 }
 
 float3 Sphere::GetNormal(const float3& I)
@@ -47,6 +47,8 @@ void Sphere::Intersect(Ray& ray)
 
 float3 Sphere::GetTexture(const float3& I, const float3& N)
 {
+	if (texture == nullptr) return material.colour;
+
 	auto phi = atan2(-N.z, N.x) + PI;
 	auto theta = acos(-N.y);
 

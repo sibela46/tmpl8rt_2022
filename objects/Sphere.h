@@ -3,7 +3,7 @@
 class Sphere
 {
 public:
-	Sphere(int id, const float3& p, float r, Material m);
+	Sphere(int id, const float3& p, float r, Material m, TextureMap* t = nullptr);
 
 	void	Intersect(Ray& ray);
 	float3	GetNormal(const float3& I);
