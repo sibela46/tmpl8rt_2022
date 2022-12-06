@@ -19,18 +19,18 @@ Scene::Scene()
 	Texture* texture = new Texture();
 	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
 	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
-	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
-	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
+	//planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
+	planes.emplace_back(Plane(2, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	planes.emplace_back(Plane(3, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
+	planes.emplace_back(Plane(4, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
-	//tori.emplace_back(Torus(0, float3(-0.f, -0.5f, 0.f), 0.5f, 0.1f, redDiffuse));
-	//cylinders.emplace_back(Cylinder(0, float3(-0.f, -0.5f, 0.f), 0.5f, 0.3f, 0.1f, redDiffuse));
+	tori.emplace_back(Torus(0, float3(-0.f, -0.5f, 0.f), 0.5f, 0.1f, redDiffuse));
+	//cylinders.emplace_back(Cylinder(0, float3(-1.f, -0.5f, 0.f), 0.3f, 0.5f, redDiffuse));
 
-	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
-	spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, whiteDiffuse));
-	spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse));
-	spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
+	//spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
+	//spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, whiteDiffuse));
+	//spheres.emplace_back(Sphere(0, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse));
+	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
 
 	//triangles.emplace_back(new Triangle(0, float3(3.0f, 0.8f, -3.0f), float3(3.0f, 0.8f, 0.0f), float3(0.0, 0.8f, 0.0f), whiteDiffuse));
 	
