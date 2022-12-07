@@ -16,11 +16,11 @@
 #define BLACK		float3(0, 0, 0)
 #define WHITE		float3(1, 1, 1)
 #define GREY		float3(0.5, 0.5, 0.5)
-#define BRIGHT		float3(5, 5, 5)
+#define BRIGHT		float3(2, 2, 2)
 #define RED			float3(1.0, 0.1, 0.1)
 #define GREEN		float3(0.1, 1, 0.1)
-#define BLUE		float3(0.09, 0.09, 0.44)
-#define PURPLE		float3(0.29, 0.0, 0.51)
+#define BLUE		float3(0.0, 0.2118, 0.6391)
+#define PURPLE		float3(0.8118, 0.0078, 0.4275)
 #define LIGHTEMMIS	1.f
 
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:

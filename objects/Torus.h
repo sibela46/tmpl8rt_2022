@@ -3,13 +3,11 @@
 class Torus
 {
 public:
-	Torus(int id, const float3& p, float r, float d, Material m);
+	Torus(int id, const float3& p, float r, float d, Material m, TextureMap* t = nullptr);
 
 	void	Intersect(Ray& ray);
 	float3	GetNormal(const float3& I);
-	float3			GetAlbedo(Light* light, const float3& I, const float3& N, const float3& D);
-	virtual float3	GetDirectLight(Light* light, const float3& I, const float3& N);
-	virtual float3	GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
+	float3	GetTexture(const float3& I, const float3& N);
 	int SolveQuartic(float c[5], float s[4]);
 	int SolveCubic(float c[4], float s[3]);
 	int SolveQuadric(float c[3], float s[2]);
@@ -21,4 +19,6 @@ public:
 	float radius2 = 0;
 	float3 position; 
 	Material material;
+	float2 uvCoords;
+	TextureMap* texture;
 };

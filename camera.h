@@ -44,19 +44,49 @@ public:
 	}
 	void RotateY(const float angle)
 	{
+		double c = cos(getRadians(angle));
+		double s = sin(getRadians(angle));
+		float3 xTransform = float3(c, 0, s);
+		float3 zTransform = float3(-s, 0, c);
+		float3 vect;
+		
+		vect = topLeft - camPos;
+		topLeft = float3(dot(vect,xTransform), vect[1], dot(vect, zTransform)) + camPos;
+		vect = topRight - camPos;
+		topRight = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
+		vect = bottomLeft - camPos;
+		bottomLeft = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
+
+		/*
 		const mat4 rotation = mat4::RotateY(getRadians(angle));
 		topLeft = topLeft * rotation;
 		topRight = topRight * rotation;
 		bottomLeft = bottomLeft * rotation;
 		camPos = camPos * rotation;
+		*/
 	}
 	void RotateX(const float angle)
 	{
+		double c = cos(getRadians(angle));
+		double s = sin(getRadians(angle));
+		float3 yTransform = float3(0, c, -s);
+		float3 zTransform = float3(0, s, c);
+		float3 vect;
+
+		vect = topLeft - camPos;
+		topLeft = float3(vect[0], dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = topRight - camPos;
+		topRight = float3(vect[0], dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = bottomLeft - camPos;
+		bottomLeft = float3(vect[0], dot(vect, yTransform),  dot(vect, zTransform)) + camPos;
+
+		/*
 		const mat4 rotation = mat4::RotateX(getRadians(angle));
 		topLeft = topLeft * rotation;
 		topRight = topRight * rotation;
 		bottomLeft = bottomLeft * rotation;
 		camPos = camPos * rotation;
+		*/
 	}
 	void Translate(float x, float y, float z)
 	{
