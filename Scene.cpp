@@ -19,34 +19,36 @@ Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
-	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, blueDiffuse)); // left wall
-	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, purpleDiffuse)); // right wall
+	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
+	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
 	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse, new TextureMap("\\assets\\floor.jpg"))); // floor
+	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	//spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.5f, glass, new TextureMap("\\assets\\universe.jpg")));
+	spheres.emplace_back(Sphere(0, float3(0.0f, -0.5f, 0.f), 0.5f, glass));
 	//spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
 	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
-	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
+	//spheres.emplace_back(Sphere(0, float3(-0.5f, -0.7f, 0.f), 0.3f, whiteDiffuse));
+
+	//cylinders.emplace_back(Cylinder(0, float3(0.0, -2.f, 3.f), 0.3f, 0.3f, redDiffuse));
 	
 	//triangles.emplace_back(Triangle(0, float3(0.0f, 0.0f, 0.0f), float3(0.0f, 1.0f, 0.0f), float3(1.0, 1.0f, 0.0f), blueDiffuse));
 
-	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), whiteDiffuse, mat4::Translate(1.0f, -0.75f, 0.f)*mat4::RotateY(10)));// , new TextureMap("\\assets\\wood.jpg")));
+	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), redDiffuse, mat4::Translate(0.5f, -0.75f, 0.f)*mat4::RotateY(10)));
 
-	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 1.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse, new TextureMap("\\assets\\wood.jpg")));
+	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 0.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse));
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(0.f, 0.8f, 0.0f));
+	light = new Light(float3(0.f, 0.8f, -2.0f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, 1.0f), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-1.5f, 0.8f, 1.0f), float3(-1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, 1.0f), areaLight));
+	triangles.emplace_back(Triangle(0, float3(-1.0f, 0.8f, -1.0f), float3(1.0f, 0.8f, -1.0f), float3(1.0f, 0.8f, 1.0f), areaLight));
+	triangles.emplace_back(Triangle(1, float3(-1.0f, 0.8f, 1.0f), float3(-1.0f, 0.8f, -1.0f), float3(1.0f, 0.8f, 1.0f), areaLight));
 #endif
 
-	LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	//LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray)
