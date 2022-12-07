@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 10) return 0;//scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 10) return scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, ray.objType, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;

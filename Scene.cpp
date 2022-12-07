@@ -46,8 +46,8 @@ Scene::Scene()
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 2.8f, -1.5f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-1.f, 0.8f, -1.f), float3(1.f, 0.8f, -1.f), float3(1.f, 0.8f, 1.f), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-1.f, 0.8f, 1.f), float3(-1.f, 0.8f, -1.f), float3(1.f, 0.8f, 1.f), areaLight));
+	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), areaLight));
+	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), areaLight));
 #endif
 
 	//LoadModel(2, "elephav.obj", redDiffuse, float3(0.f, -1.f, 0.0f), 0.5f);
