@@ -6,13 +6,14 @@ https://github.com/lishicao/RayTracer/blob/master/myRayTracer/GeometricObjects/P
 **/
 
 
-Torus::Torus(int id, const float3& p, float r, float d,  Material m)
+Torus::Torus(int id, const float3& p, float r, float d,  Material m, TextureMap* t)
 {
 	index = id;
 	radius = r;
 	radius2 = d;
 	position = p;
 	material = m;
+	texture = t;
 }
 
 float3 Torus::GetNormal(const float3& I)
@@ -72,25 +73,16 @@ void Torus::Intersect(Ray& ray)
 
 }
 
-float3 Torus::GetDirectLight(Light* light, const float3& I, const float3& N)
+float3 Torus::GetTexture(const float3& I, const float3& N)
 {
-	float3 dirToLight = (light->GetPosition() - I);
-	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
-	return light->GetEmission() * light->GetColour() * dotProduct * (1 / PI);
-}
+	if (texture == nullptr) return material.colour;
 
-float3 Torus::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	float3 distToLight = normalize(light->position - I);
-	float A = 4 * PI * dot(distToLight, distToLight);
-	float3 B = light->GetColour() / A;
-	float3 reflected = normalize(reflect(-distToLight, N));
-	return pow(-dot(reflected, D), 20.0f);
-}
+	auto phi = atan2(-N.z, N.x) + PI;
+	auto theta = acos(-N.y);
 
-float3 Torus::GetAlbedo(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	return material.colour * material.Kd + material.Ks * GetSpecularColour(light, I, N, D);
+	float u = phi / (2 * PI);
+	float v = theta / PI;
+	return texture->GetColourAt(u, v);
 }
 
 

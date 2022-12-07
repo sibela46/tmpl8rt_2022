@@ -12,7 +12,6 @@ public:
 	float3 GetNormal(int idx, ObjectType type, const float3& I, const float3& D);
 	float3 GetShade(int idx, ObjectType type, const float3& I, const float3& D);
 	float3 GetAlbedo(Ray& ray, const float3& N);
-	float3 GetTexture(Ray& ray, const float3& N);
 	float3 GetSkydomeTexture(const Ray& ray);
 	float3 GetSpecularColour(const float3& I, const float3& N, const float3& D);
 

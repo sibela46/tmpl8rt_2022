@@ -21,7 +21,6 @@
 #define GREEN		float3(0.1, 1, 0.1)
 #define BLUE		float3(0, 0.2118, 0.6392)
 #define PURPLE		float3(0.8118, 0.0078, 0.4275)
-#define LIGHTEMMIS	1.f
 
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:
 // Without a GPU, a laptop needs at least a 'Broadwell' Intel CPU (5th gen, 2015):

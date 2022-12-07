@@ -251,19 +251,9 @@ float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& 
 
 float3 Scene::GetAlbedo(Ray& ray, const float3& N)
 {
-#ifdef TEXTURING
-	return GetTexture(ray, N);
-#else
-	if (ray.objMaterial.type == MaterialType::GLASS) return ray.objMaterial.colour;
-	return ray.objMaterial.colour *ray.objMaterial.Kd + ray.objMaterial.Ks * GetSpecularColour(ray.IntersectionPoint(), N, ray.D);
-#endif
-}
-
-float3 Scene::GetTexture(Ray& ray, const float3& N)
-{
 	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	if (ray.objType == ObjectType::CUBE) return cubes[0].GetTexture(ray.IntersectionPoint(), N);
+	if (ray.objType == ObjectType::CUBE) return cubes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::TRIANGLE) return triangles[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CYLINDER) return cylinders[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	return (0, 1, 0);
