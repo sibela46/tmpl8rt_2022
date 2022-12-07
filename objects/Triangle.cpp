@@ -37,3 +37,8 @@ float3 Triangle::GetNormal(const float3& I)
 {
 	return normalize(cross(v1 - v0, v2 - v0));
 }
+
+float3 Triangle::GetTexture(const float3& I, const float3& N)
+{
+	return material.colour;
+}

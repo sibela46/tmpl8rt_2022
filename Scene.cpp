@@ -8,31 +8,33 @@ Material whiteDiffuse = { WHITE,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material whiteSpecular = { WHITE,  MaterialType::DIFFUSE, 0.5, 0.5 };
 Material redDiffuse = { RED,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material blueDiffuse = { BLUE,  MaterialType::DIFFUSE, 1.0, 0.0 };
+Material purpleDiffuse = { PURPLE,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material blueShiny = { BLUE,  MaterialType::DIFFUSE, 1.0, 1.0 };
+Material blackShiny = { BLACK,  MaterialType::DIFFUSE, 1.0, 1.0 };
+Material greyShiny = { GREY,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { WHITE,  MaterialType::GLASS, 1.0, 1.0 };
+Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
-	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, redDiffuse)); // left wall
-	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, greenDiffuse)); // right wall
+	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, blueDiffuse)); // left wall
+	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, purpleDiffuse)); // right wall
 	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse, new TextureMap("\\assets\\floor.jpg"))); // floor
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.3f, mirror));
-	spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
-	spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
-	spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
+	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.5f, glass, new TextureMap("\\assets\\universe.jpg")));
+	//spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
+	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
+	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
 	
 	//triangles.emplace_back(Triangle(0, float3(0.0f, 0.0f, 0.0f), float3(0.0f, 1.0f, 0.0f), float3(1.0, 1.0f, 0.0f), blueDiffuse));
-	
-	cubes.emplace_back(Cube(0, float3(0), float3(0.5f), whiteDiffuse, mat4::Translate(-1.0f, -0.75f, 0.5f)));
 
-	//LoadModel(0, "", whiteDiffuse, float3(0.f, -1.5f, 0.f), 0.5f);
+	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), whiteDiffuse, mat4::Translate(1.0f, -0.75f, 0.f)*mat4::RotateY(10)));// , new TextureMap("\\assets\\wood.jpg")));
+
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
@@ -43,6 +45,7 @@ Scene::Scene()
 	triangles.emplace_back(Triangle(1, float3(-0.5f, 0.8f, 0.0f), float3(-0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, 0.0f), areaLight));
 #endif
 
+	LoadModel(2, "bunny.obj", glass, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray)
@@ -60,10 +63,6 @@ void Scene::FindNearest(Ray& ray)
 	{
 		spheres[i].Intersect(ray);
 	}
-	for (int i = 0; i < planes.size(); ++i)
-	{
-		planes[i].Intersect(ray);
-	}
 	for (int i = 0; i < cubes.size(); ++i)
 	{
 		cubes[i].Intersect(ray);
@@ -71,6 +70,10 @@ void Scene::FindNearest(Ray& ray)
 	for (int i = 0; i < tori.size(); ++i)
 	{
 		tori[i].Intersect(ray);
+	}
+	for (int i = 0; i < planes.size(); ++i)
+	{
+		planes[i].Intersect(ray);
 	}
 }
 
@@ -175,15 +178,13 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 		else if (strcmp(lineHeader, "f") == 0)
 		{
 			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
+			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
 			char stupidBuffer[1024];
 			fgets(stupidBuffer, 1024, file);
 			int matches = sscanf(stupidBuffer, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 			if (matches != 9) {
-				vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
 				matches = sscanf(stupidBuffer, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
 				if (matches != 6) {
-					vertexIndex[3] = { 0 }, uvIndex[3] = { 0 }, normalIndex[3] = { 0 };
 					matches = sscanf(stupidBuffer, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
 					if (matches != 3) {
 						printf("File can't be read \n");
@@ -251,7 +252,8 @@ float3 Scene::GetTexture(Ray& ray, const float3& N)
 {
 	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	if (ray.objType == ObjectType::CUBE) return cubes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	if (ray.objType == ObjectType::CUBE) return cubes[0].GetTexture(ray.IntersectionPoint(), N);
+	if (ray.objType == ObjectType::TRIANGLE) return triangles[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	return (0, 1, 0);
 }
 

@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 5) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 10) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray.objIdx, ray.objType, I, ray.D);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -34,7 +34,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 		float3 rayOrigin = I + bias;
 
 		float3 illumination = 0;
-		for (int i = 0; i < 2; ++i)
+		for (int i = 0; i < 1; ++i)
 		{
 			float3 randomUnitVec = normalize(SampleHemisphere(N));
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
@@ -44,7 +44,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 			illumination += 2.f * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
 		}
 
-		return illumination / 2;
+		return illumination / 1;
 #endif
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
@@ -88,7 +88,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 		return (fresneleffect * reflectionColour + 
 				(1 - fresneleffect) * refractionColour * ray.objMaterial.Ks)
-				* ray.objMaterial.colour;
+				* scene->GetAlbedo(ray, N);
 	}
 	else if (ray.objMaterial.type == MaterialType::LIGHT)
 	{
