@@ -24,6 +24,7 @@ public:
 	std::vector<Sphere> spheres;
 	std::vector<Cube> cubes;
 	std::vector<Torus> tori;
+	std::vector<Cylinder> cylinders;
 	Light* light;
 	TextureMap* skydomeTexture;
 };

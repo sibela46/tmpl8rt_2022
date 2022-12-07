@@ -88,7 +88,7 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-//#define WITTED_STYLE // comment out for path tracing
+#define WHITTED_STYLE // comment out for path tracing
 #define TEXTURING // uncomment to enable textures
 
 // zlib
@@ -1704,7 +1704,7 @@ public:
 
 // Material structure
 enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
-enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, TORUS = 4 };
+enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, CYLINDER = 4, TORUS = 5 };
 
 struct Material
 {
@@ -1723,6 +1723,7 @@ struct Material
 #include "objects/Plane.h"
 #include "objects/Light.h"
 #include "objects/Cube.h"
+#include "objects/Cylinder.h"
 #include "Scene.h"
 #include "camera.h"
 #include "renderer.h"

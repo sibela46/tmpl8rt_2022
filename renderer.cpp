@@ -26,7 +26,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
-#ifdef WITTED_STYLE
+#ifdef WHITTED_STYLE
 		return scene->GetAlbedo(ray, N) * scene->GetShade(ray.objIdx, ray.objType, I, N);
 #else
 		float3 bias = 0.001f * N;

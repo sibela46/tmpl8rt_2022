@@ -23,10 +23,10 @@ Scene::Scene()
 	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, purpleDiffuse)); // right wall
 	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
 	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse, new TextureMap("\\assets\\floor.jpg"))); // floor
-	planes.emplace_back(Plane(4, float3(0, 0, 1), 4.f, whiteDiffuse)); // front wall
+	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.5f, glass, new TextureMap("\\assets\\universe.jpg")));
+	//spheres.emplace_back(Sphere(0, float3(-0.9f, -0.5f, 0.f), 0.5f, glass, new TextureMap("\\assets\\universe.jpg")));
 	//spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
 	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
 	//spheres.emplace_back(Sphere(3, float3(0.9f, -0.5f, 0.f), 0.3f, glass));
@@ -35,17 +35,18 @@ Scene::Scene()
 
 	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), whiteDiffuse, mat4::Translate(1.0f, -0.75f, 0.f)*mat4::RotateY(10)));// , new TextureMap("\\assets\\wood.jpg")));
 
+	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 1.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse, new TextureMap("\\assets\\wood.jpg")));
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
-#ifdef WITTED_STYLE
+#ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.8f, 0.0f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, 0.0f), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-0.5f, 0.8f, 0.0f), float3(-0.5f, 0.8f, -1.0f), float3(0.5f, 0.8f, 0.0f), areaLight));
+	triangles.emplace_back(Triangle(0, float3(-1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, 1.0f), areaLight));
+	triangles.emplace_back(Triangle(1, float3(-1.5f, 0.8f, 1.0f), float3(-1.5f, 0.8f, -1.0f), float3(1.5f, 0.8f, 1.0f), areaLight));
 #endif
 
-	LoadModel(2, "bunny.obj", glass, float3(2.0f, -2.f, 0.0f), 0.5f);
+	LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray)
@@ -70,6 +71,10 @@ void Scene::FindNearest(Ray& ray)
 	for (int i = 0; i < tori.size(); ++i)
 	{
 		tori[i].Intersect(ray);
+	}
+	for (int i = 0; i < cylinders.size(); ++i)
+	{
+		cylinders[i].Intersect(ray);
 	}
 	for (int i = 0; i < planes.size(); ++i)
 	{
@@ -105,6 +110,10 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	else if (type == ObjectType::CUBE)
 	{
 		N = cubes[idx].GetNormal(I);
+	}
+	else if (type == ObjectType::CYLINDER)
+	{
+		N = cylinders[idx].GetNormal(I);
 	}
 	else if (type == ObjectType::TORUS)
 	{
@@ -227,7 +236,7 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& D)
 {
-#ifdef WITTED_STYLE
+#ifdef WHITTED_STYLE
 	float3 distToLight = normalize(light->position - I);
 	float A = 4 * PI * dot(distToLight, distToLight);
 	float3 B = light->GetColour() / A;
@@ -254,6 +263,7 @@ float3 Scene::GetTexture(Ray& ray, const float3& N)
 	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CUBE) return cubes[0].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::TRIANGLE) return triangles[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	if (ray.objType == ObjectType::CYLINDER) return cylinders[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	return (0, 1, 0);
 }
 

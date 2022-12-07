@@ -27,6 +27,9 @@
     <ClCompile Include="objects\Cube.cpp">
       <Filter>objects</Filter>
     </ClCompile>
+    <ClCompile Include="objects\Cylinder.cpp">
+      <Filter>objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -60,6 +63,9 @@
       <Filter>objects</Filter>
     </ClInclude>
     <ClInclude Include="objects\Cube.h">
+      <Filter>objects</Filter>
+    </ClInclude>
+    <ClInclude Include="objects\Cylinder.h">
       <Filter>objects</Filter>
     </ClInclude>
   </ItemGroup>

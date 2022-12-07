@@ -19,12 +19,12 @@ public:
 		// setup a basic view frustum
 		focalLen = 1.0f;
 		aspect *= focalLen;
-		camPos = float3( 0, -0.7f, -2.f );
+		camPos = float3( 0, -0.7f, -2.0f );
 		screenCentre = float3( 0, 0, 0 );
 		topLeft = float3( -aspect, 1, 0 );
 		topRight = float3( aspect, 1, 0 );
 		bottomLeft = float3( -aspect, -1, 0 );
-		Translate(0.0, 0.0, -2.0f);
+		Translate(0.0, 0.0, -3.f);
 	}
 	float getRadians(const float angle)
 	{

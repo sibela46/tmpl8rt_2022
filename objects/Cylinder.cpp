@@ -41,24 +41,7 @@ float3 Cylinder::GetNormal(const float3& I)
 	return normalize(n);
 }
 
-
-float3 Cylinder::GetDirectLight(Light* light, const float3& I, const float3& N)
+float3 Cylinder::GetTexture(const float3& I, const float3& N)
 {
-	float3 dirToLight = (light->GetPosition() - I);
-	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
-	return light->GetEmission() * light->GetColour() * dotProduct * (1 / PI);
-}
-
-float3 Cylinder::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	float3 distToLight = normalize(light->position - I);
-	float A = 4 * PI * dot(distToLight, distToLight);
-	float3 B = light->GetColour() / A;
-	float3 reflected = normalize(reflect(-distToLight, N));
-	return pow(-dot(reflected, D), 20.0f);
-}
-
-float3 Cylinder::GetAlbedo(Light* light, const float3& I, const float3& N, const float3& D)
-{
-	return material.colour * material.Kd + material.Ks * GetSpecularColour(light, I, N, D);
+	return material.colour;
 }
