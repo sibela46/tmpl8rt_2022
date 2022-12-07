@@ -24,7 +24,7 @@ public:
 		topLeft = float3( -aspect, 1, 0 );
 		topRight = float3( aspect, 1, 0 );
 		bottomLeft = float3( -aspect, -1, 0 );
-		Translate(0.0, 0.0, -3.f);
+		Translate(0.0, 0.0, -3.2f);
 	}
 	float getRadians(const float angle)
 	{
@@ -56,14 +56,6 @@ public:
 		topRight = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
 		vect = bottomLeft - camPos;
 		bottomLeft = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
-
-		/*
-		const mat4 rotation = mat4::RotateY(getRadians(angle));
-		topLeft = topLeft * rotation;
-		topRight = topRight * rotation;
-		bottomLeft = bottomLeft * rotation;
-		camPos = camPos * rotation;
-		*/
 	}
 	void RotateX(const float angle)
 	{
@@ -79,14 +71,6 @@ public:
 		topRight = float3(vect[0], dot(vect, yTransform), dot(vect, zTransform)) + camPos;
 		vect = bottomLeft - camPos;
 		bottomLeft = float3(vect[0], dot(vect, yTransform),  dot(vect, zTransform)) + camPos;
-
-		/*
-		const mat4 rotation = mat4::RotateX(getRadians(angle));
-		topLeft = topLeft * rotation;
-		topRight = topRight * rotation;
-		bottomLeft = bottomLeft * rotation;
-		camPos = camPos * rotation;
-		*/
 	}
 	void Translate(float x, float y, float z)
 	{

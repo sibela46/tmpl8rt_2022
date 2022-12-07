@@ -88,8 +88,7 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#define WHITTED_STYLE // comment out for path tracing
-#define TEXTURING // uncomment to enable textures
+#define WHITTED_STYLE // comment for path tracing
 
 // zlib
 #include "zlib.h"
