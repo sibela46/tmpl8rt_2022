@@ -21,20 +21,18 @@ Scene::Scene()
 {
 	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
 	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
-	planes.emplace_back(Plane(2, float3(0, -1, 0), 1.f, whiteDiffuse)); // ceiling
+	planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
 	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	spheres.emplace_back(Sphere(0, float3(0.0f, -0.5f, 0.f), 0.5f, glass));
-	//spheres.emplace_back(Sphere(1, float3(-0.3f, -0.5f, 0.f), 0.3f, blueShiny));
-	//spheres.emplace_back(Sphere(2, float3(0.3f, -0.5f, 0.f), 0.3f, redDiffuse, new TextureMap("\\assets\\earth.jpg")));
-	//spheres.emplace_back(Sphere(0, float3(-0.5f, -0.7f, 0.f), 0.3f, whiteDiffuse));
+	spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
+	spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
+	spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
+	spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
 
 	//cylinders.emplace_back(Cylinder(0, float3(0.0, -2.f, 3.f), 0.3f, 0.3f, redDiffuse));
 	
-	//triangles.emplace_back(Triangle(0, float3(0.0f, 0.0f, 0.0f), float3(0.0f, 1.0f, 0.0f), float3(1.0, 1.0f, 0.0f), blueDiffuse));
-
 	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), redDiffuse, mat4::Translate(0.5f, -0.75f, 0.f)*mat4::RotateY(10)));
 
 	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 0.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse));
@@ -54,9 +52,6 @@ Scene::Scene()
 void Scene::FindNearest(Ray& ray)
 {
 	float t;
-	/*if (ray.D.x < 0) PLANE_X(3, 0, redDiffuse) else PLANE_X(-2.99f, 1, greenDiffuse);
-	if (ray.D.y < 0) PLANE_Y(1, 2, whiteDiffuse) else PLANE_Y(-2, 3, whiteDiffuse);
-	if (ray.D.z < 0) PLANE_Z(3, 4, whiteDiffuse) else PLANE_Z(-3.99f, 5, whiteDiffuse);*/
 
 	for (int i = 0; i < triangles.size(); ++i)
 	{
