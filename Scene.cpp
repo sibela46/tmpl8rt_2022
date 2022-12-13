@@ -26,10 +26,10 @@ Scene::Scene()
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
-	spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
-	spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
-	spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
+	//spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
+	//spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
+	//spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
+	//spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
 
 	//cylinders.emplace_back(Cylinder(0, float3(0.0, -2.f, 3.f), 0.3f, 0.3f, redDiffuse));
 	
@@ -37,7 +37,7 @@ Scene::Scene()
 
 	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 0.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse));
 
-	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
+	//skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.8f, -2.0f));
@@ -46,13 +46,17 @@ Scene::Scene()
 	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), areaLight));
 #endif
 
-	//LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray)
 {
 	float t;
 
+	for (int i = 0; i < models.size(); ++i)
+	{
+		models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
+	}
 	for (int i = 0; i < triangles.size(); ++i)
 	{
 		triangles[i].Intersect(ray);
@@ -144,6 +148,8 @@ float3 Scene::GetBeersLaw(Ray& ray)
 
 void Scene::LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale)
 {
+	vector<Triangle> Model;
+
 	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z);
 
 	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
@@ -226,9 +232,12 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 	for (unsigned int i = 0; i < out_vertices.size() - 2; i += 3)
 	{
-		triangles.emplace_back(Triangle(idx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], material));
+		Model.emplace_back(Triangle(idx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], material));
 		idx += 1;
 	}
+	Bvh b(Model);
+	b.BuildBVH();
+	models.emplace_back(b);
 }
 
 float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& D)

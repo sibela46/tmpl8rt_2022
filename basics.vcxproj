@@ -122,6 +122,7 @@
   </ItemDefinitionGroup>
   <!-- END Custom section -->
   <ItemGroup>
+    <ClCompile Include="Bvh.cpp" />
     <ClCompile Include="objects\Cube.cpp" />
     <ClCompile Include="objects\Cylinder.cpp" />
     <ClCompile Include="objects\Light.cpp" />
@@ -138,6 +139,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bvh.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="objects\Cube.h" />
     <ClInclude Include="objects\Cylinder.h" />

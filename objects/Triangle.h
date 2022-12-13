@@ -11,7 +11,7 @@ namespace Tmpl8
 		float3 GetTexture(const float3& I, const float3& N);
 
 	public:
-		float3 v0, v1, v2;
+		float3 v0, v1, v2, centroid;
 		float u, v;
 		int index;
 		Material material;

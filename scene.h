@@ -19,6 +19,7 @@ public:
 
 public:
 	std::vector<Triangle> triangles;
+	std::vector<Bvh> models;
 	std::vector<Plane> planes;
 	std::vector<Sphere> spheres;
 	std::vector<Cube> cubes;

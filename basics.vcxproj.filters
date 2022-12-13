@@ -30,6 +30,7 @@
     <ClCompile Include="objects\Cylinder.cpp">
       <Filter>objects</Filter>
     </ClCompile>
+    <ClCompile Include="Bvh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -68,6 +69,7 @@
     <ClInclude Include="objects\Cylinder.h">
       <Filter>objects</Filter>
     </ClInclude>
+    <ClInclude Include="Bvh.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
