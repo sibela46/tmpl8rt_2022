@@ -24,19 +24,20 @@ void Triangle::Intersect(Ray& ray)
 	v = f * dot(ray.D, q);
 	if (v < 0.0 || u + v > 1.0) return;
 	float t = f * dot(edge2, q);
-	if (t > EPSILON)
+	if (t > EPSILON && t < ray.t)
 	{
 		ray.t = t;
 		ray.objIdx = index;
 		ray.objMaterial = material;
 		ray.objType = ObjectType::TRIANGLE;
-		ray.normal = GetNormal(ray.O + t * ray.D);
+		ray.normal = normal;
+		ray.inside = dot(ray.D, normal) > 0;
 		return;
 	}
 	return;
 }
 
-float3 Triangle::GetNormal(const float3& I)
+float3 Triangle::GetNormal()
 {
 	return normal;
 }

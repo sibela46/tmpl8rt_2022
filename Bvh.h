@@ -19,7 +19,6 @@ public:
 	void	Subdivide(uint nodeIdx);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
-	float	GetNormal(int idx, ObjectType type, const float3& I, const float3& D);
 public:
 	static const uint rootNodeIdx = 0;
 	uint nodesUsed = 1;

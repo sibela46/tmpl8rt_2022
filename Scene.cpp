@@ -28,7 +28,7 @@ Scene::Scene()
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
+	//spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
 	//spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
 	//spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
 	//spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
@@ -42,35 +42,28 @@ Scene::Scene()
 	//skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(0.f, 0.8f, -2.0f));
+	light = new Light(float3(0.f, 0.5f, 0.0f));
 #else
 	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
 	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
 #endif
 
-	LoadModelNew(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	//LoadModelNew(0, "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
+	LoadModelNew(2, "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray, bool isShadowRay)
 {
 	float t;
 
-	if (isShadowRay)
+	for (int i = 0; i < triangles.size(); ++i)
 	{
-		for (int i = 0; i < triangles.size(); ++i)
-		{
-			triangles[i].Intersect(ray);
-		}
+		triangles[i].Intersect(ray);
 	}
-	else
+	for (int i = 0; i < models.size(); ++i)
 	{
-		for (int i = 0; i < models.size(); ++i)
-		{
-			models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
-		}
+		models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
 	}
-
-
 	for (int i = 0; i < spheres.size(); ++i)
 	{
 		spheres[i].Intersect(ray);
@@ -93,14 +86,16 @@ void Scene::FindNearest(Ray& ray, bool isShadowRay)
 	}
 }
 
-bool Scene::IsOccluded(const float3& I, const float3& N)
+bool Scene::IsOccluded(const Ray& ray)
 {
-	float3 bias = 0.001f * N;
+	float3 bias = 0.001f * ray.normal;
+	float3 I = ray.O + ray.t * ray.D;
+	float3 origin = ray.inside ? I - bias : I + bias;
 	float3 dirToLight = (light->position - I);
-	Ray rayToLight = Ray(I + bias, normalize(dirToLight));
+	Ray rayToLight = Ray(origin, normalize(dirToLight));
 	FindNearest(rayToLight, true);
 
-	return rayToLight.t < length(dirToLight);
+	return rayToLight.t*rayToLight.t < dot(dirToLight, dirToLight);
 }
 
 float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3& D)
@@ -108,11 +103,11 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	float3 N;
 	if (type == ObjectType::PLANE)
 	{
-		N = planes[idx].GetNormal(I);
+		N = planes[idx].GetNormal();
 	}
 	else if (type == ObjectType::TRIANGLE)
 	{
-		N = triangles[idx].GetNormal(I);
+		N = triangles[idx].GetNormal();
 	}
 	else if (type == ObjectType::SPHERE)
 	{
@@ -134,20 +129,21 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	return N;
 }
 
-float3 Scene::GetNormal(Ray& ray)
+float3 Scene::GetNormal(const Ray& ray)
 {
-	if (dot(ray.normal, ray.D) > 0) return -ray.normal; // hit backside / inside
-	return ray.normal;
+	if (ray.inside) return -ray.normal; 
+	return ray.normal; // hit backside / inside
 }
 
-float3 Scene::GetShade(int idx, ObjectType type, const float3& I, const float3& N)
+float3 Scene::GetShade(const Ray& ray)
 {
-	//if (IsOccluded(I, N)) return 0;
+	if (IsOccluded(ray)) return 0;
+	float3 I = ray.O + ray.t * ray.D;
 	float3 dirToLight = (light->GetPosition() - I);
-	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
+	float dotProduct = max(0.f, dot(normalize(dirToLight), ray.normal));
 	float attenuation = 1 / length(dirToLight);
 	float invPi = 1 / PI;
-	return light->GetEmission() * light->GetColour() * dotProduct * invPi;
+	return light->GetEmission() * light->GetColour() * dotProduct * attenuation * invPi;
 }
 
 float3 Scene::GetBeersLaw(Ray& ray)
@@ -258,7 +254,7 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
 {
 	std::vector<Triangle> mesh;
-	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z);
+	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) ;
 
 	std::string inputfile = fileName;
 	tinyobj::ObjReaderConfig reader_config;
@@ -297,7 +293,7 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 				tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
 				tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
 				tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
-				float3 newVertex = float4(vx, vy, vz, 1.f) * transform * scale;
+				float3 newVertex = float4(vx, vy, vz, 1.f) * scale * transform;
 				vertices.push_back(newVertex);
 
 				// Check if `normal_index` is zero or positive. negative = no normal data

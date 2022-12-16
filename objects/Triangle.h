@@ -7,7 +7,7 @@ namespace Tmpl8
 	public:
 		Triangle(int idx, const float4& vertex1, const float4& vertex2, const float4& vertex3, const float3& normal, Material material, TextureMap* texture=nullptr);
 		void Intersect(Ray& ray);
-		float3 GetNormal(const float3& I);
+		float3 GetNormal();
 		float3 GetTexture(const float3& I, const float3& N);
 
 	public:

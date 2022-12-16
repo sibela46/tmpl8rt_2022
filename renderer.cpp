@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray, false);
-	if (ray.objIdx == -1 || depth == 10) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 5) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -27,7 +27,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
 #ifdef WHITTED_STYLE
-		return scene->GetAlbedo(ray, ray.normal) * scene->GetShade(ray.objIdx, ray.objType, I, N);
+		return scene->GetAlbedo(ray, ray.normal) * scene->GetShade(ray);
 #else
 		float3 bias = 0.001f * N;
 		//bool outside = dot(ray.D, N) < 0;

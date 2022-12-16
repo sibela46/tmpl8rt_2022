@@ -9,7 +9,7 @@ Plane::Plane(int id, const float3& n, float d, Material m, TextureMap* t)
 	texture = t;
 }
 
-float3 Plane::GetNormal(const float3& I)
+float3 Plane::GetNormal()
 {
 	return normal;
 }
@@ -24,6 +24,7 @@ void Plane::Intersect(Ray& ray)
 		ray.objMaterial = material;
 		ray.objType = ObjectType::PLANE;
 		ray.normal = normal;
+		ray.inside = dot(ray.D, normal) > 0;
 	}
 }
 

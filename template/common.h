@@ -18,7 +18,7 @@
 #define GREY		float3(0.5, 0.5, 0.5)
 #define BRIGHT		float3(2, 2, 2)
 #define RED			float3(1.0, 0.1, 0.1)
-#define GREEN		float3(0.1, 1, 0.1)
+#define GREEN		float3(0.1, 0.9, 0.1)
 #define BLUE		float3(0, 0.2118, 0.6392)
 #define PURPLE		float3(0.8118, 0.0078, 0.4275)
 

@@ -30,7 +30,7 @@ public:
 #endif
 	float t = 1e34f;
 	int objIdx = -1;
-	bool inside = false; // true when in medium
+	bool inside = false;
 	Material objMaterial;
 	ObjectType objType;
 	float3 normal;
