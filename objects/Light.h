@@ -3,7 +3,7 @@
 class Light
 {
 public:
-	Light(float3 p);
+	Light(const float3& p);
 
 	float3	GetPosition();
 	float	GetEmission();

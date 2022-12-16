@@ -33,6 +33,7 @@ public:
 	bool inside = false; // true when in medium
 	Material objMaterial;
 	ObjectType objType;
+	float3 normal;
 };
 
 }

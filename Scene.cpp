@@ -1,4 +1,6 @@
 #include "precomp.h"
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "lib/tiny_obj_loader.h"
 
 #define PLANE_X(o,i,m) {if((t=-(ray.O.x+o)*ray.rD.x)<ray.t)ray.t=t,ray.objIdx=i,ray.objMaterial=m;}
 #define PLANE_Y(o,i,m) {if((t=-(ray.O.y+o)*ray.rD.y)<ray.t)ray.t=t,ray.objIdx=i,ray.objMaterial=m;}
@@ -26,7 +28,7 @@ Scene::Scene()
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 	
-	//spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
+	spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
 	//spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
 	//spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
 	//spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
@@ -42,25 +44,33 @@ Scene::Scene()
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.8f, -2.0f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), areaLight));
+	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
+	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
 #endif
 
-	LoadModel(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	LoadModelNew(0, "bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
-void Scene::FindNearest(Ray& ray)
+void Scene::FindNearest(Ray& ray, bool isShadowRay)
 {
 	float t;
 
-	for (int i = 0; i < models.size(); ++i)
+	if (isShadowRay)
 	{
-		models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
+		for (int i = 0; i < triangles.size(); ++i)
+		{
+			triangles[i].Intersect(ray);
+		}
 	}
-	for (int i = 0; i < triangles.size(); ++i)
+	else
 	{
-		triangles[i].Intersect(ray);
+		for (int i = 0; i < models.size(); ++i)
+		{
+			models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
+		}
 	}
+
+
 	for (int i = 0; i < spheres.size(); ++i)
 	{
 		spheres[i].Intersect(ray);
@@ -88,14 +98,14 @@ bool Scene::IsOccluded(const float3& I, const float3& N)
 	float3 bias = 0.001f * N;
 	float3 dirToLight = (light->position - I);
 	Ray rayToLight = Ray(I + bias, normalize(dirToLight));
-	FindNearest(rayToLight);
+	FindNearest(rayToLight, true);
 
 	return rayToLight.t < length(dirToLight);
 }
 
 float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3& D)
 {
-	float3 N = 0;
+	float3 N;
 	if (type == ObjectType::PLANE)
 	{
 		N = planes[idx].GetNormal(I);
@@ -124,12 +134,20 @@ float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3&
 	return N;
 }
 
+float3 Scene::GetNormal(Ray& ray)
+{
+	if (dot(ray.normal, ray.D) > 0) return -ray.normal; // hit backside / inside
+	return ray.normal;
+}
+
 float3 Scene::GetShade(int idx, ObjectType type, const float3& I, const float3& N)
 {
-	if (IsOccluded(I, N)) return 0;
+	//if (IsOccluded(I, N)) return 0;
 	float3 dirToLight = (light->GetPosition() - I);
 	float dotProduct = max(0.f, dot(normalize(dirToLight), N));
-	return light->GetEmission() * light->GetColour() * dotProduct * (1 / PI);
+	float attenuation = 1 / length(dirToLight);
+	float invPi = 1 / PI;
+	return light->GetEmission() * light->GetColour() * dotProduct * invPi;
 }
 
 float3 Scene::GetBeersLaw(Ray& ray)
@@ -137,7 +155,7 @@ float3 Scene::GetBeersLaw(Ray& ray)
 	if (ray.objIdx == -1) return 1;
 	float distanceTravelled = ray.t;
 	float3 absorbance = (ray.objMaterial.colour) * 0.15f * (-distanceTravelled);
-	float3 N = GetNormal(ray.objIdx, ray.objType, ray.IntersectionPoint(), ray.D);
+	float3 N = GetNormal(ray);
 	bool outside = dot(ray.D, N) > 0;
 	if (outside)
 	{
@@ -232,35 +250,99 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 	for (unsigned int i = 0; i < out_vertices.size() - 2; i += 3)
 	{
-		Model.emplace_back(Triangle(idx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], material));
+		Model.emplace_back(Triangle(idx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], out_normals[i], material));
 		idx += 1;
 	}
-	Bvh b(Model);
+}
+
+void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
+{
+	std::vector<Triangle> mesh;
+	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z);
+
+	std::string inputfile = fileName;
+	tinyobj::ObjReaderConfig reader_config;
+	reader_config.mtl_search_path = "./"; // Path to material files
+
+	tinyobj::ObjReader reader;
+
+	if (!reader.ParseFromFile(inputfile, reader_config)) {
+		if (!reader.Error().empty()) {
+			std::cerr << "TinyObjReader: " << reader.Error();
+		}
+		exit(1);
+	}
+
+	if (!reader.Warning().empty()) {
+		std::cout << "TinyObjReader: " << reader.Warning();
+	}
+
+	auto& attrib = reader.GetAttrib();
+	auto& shapes = reader.GetShapes();
+	auto& materials = reader.GetMaterials();
+
+	// Loop over shapes
+	for (size_t s = 0; s < shapes.size(); s++) {
+		// Loop over faces(polygon)
+		size_t index_offset = 0;
+		for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
+			size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+			std::vector<float4> vertices;
+			float3 normal = float3(0);
+
+			// Loop over vertices in the face.
+			for (size_t v = 0; v < fv; v++) {
+				// access to vertex
+				tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+				tinyobj::real_t vx = attrib.vertices[3 * size_t(idx.vertex_index) + 0];
+				tinyobj::real_t vy = attrib.vertices[3 * size_t(idx.vertex_index) + 1];
+				tinyobj::real_t vz = attrib.vertices[3 * size_t(idx.vertex_index) + 2];
+				float3 newVertex = float4(vx, vy, vz, 1.f) * transform * scale;
+				vertices.push_back(newVertex);
+
+				// Check if `normal_index` is zero or positive. negative = no normal data
+				if (idx.normal_index >= 0) {
+					tinyobj::real_t nx = attrib.normals[3 * size_t(idx.normal_index) + 0];
+					tinyobj::real_t ny = attrib.normals[3 * size_t(idx.normal_index) + 1];
+					tinyobj::real_t nz = attrib.normals[3 * size_t(idx.normal_index) + 2];
+					normal = float3(nx, ny, nz);
+				}
+
+				// Check if `texcoord_index` is zero or positive. negative = no texcoord data
+				if (idx.texcoord_index >= 0) {
+					tinyobj::real_t tx = attrib.texcoords[2 * size_t(idx.texcoord_index) + 0];
+					tinyobj::real_t ty = attrib.texcoords[2 * size_t(idx.texcoord_index) + 1];
+				}
+
+				// Optional: vertex colors
+				// tinyobj::real_t red   = attrib.colors[3*size_t(idx.vertex_index)+0];
+				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
+				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
+			}
+			Triangle newTri = Triangle(triIdx, vertices[0], vertices[1], vertices[2], normal, material);
+			mesh.push_back(newTri);
+
+			index_offset += fv;
+			triIdx += 1;
+			// per-face material
+			shapes[s].mesh.material_ids[f];
+		}
+	}
+
+	Bvh b(mesh);
 	b.BuildBVH();
 	models.emplace_back(b);
 }
 
-float3 Scene::GetSpecularColour(const float3& I, const float3& N, const float3& D)
-{
-#ifdef WHITTED_STYLE
-	float3 distToLight = normalize(light->position - I);
-	float A = 4 * PI * dot(distToLight, distToLight);
-	float3 B = light->GetColour() / A;
-	float3 reflected = normalize(reflect(-distToLight, N));
-	return pow(-dot(reflected, D), 20.0f);
-#else
-	return 0;
-#endif
-}
-
 float3 Scene::GetAlbedo(Ray& ray, const float3& N)
 {
-	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+	return ray.objMaterial.colour;
+	/*if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CUBE) return cubes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::TRIANGLE) return triangles[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CYLINDER) return cylinders[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	return (0, 1, 0);
+	return (0, 1, 0);*/
 }
 
 float3 Scene::GetSkydomeTexture(const Ray& ray)

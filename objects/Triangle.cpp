@@ -1,11 +1,12 @@
 #include "precomp.h"
 
-Triangle::Triangle(int id, const float4& vertex1, const float4& vertex2, const float4& vertex3, Material m, TextureMap* t)
+Triangle::Triangle(int id, const float4& vertex1, const float4& vertex2, const float4& vertex3, const float3& n, Material m, TextureMap* t)
 {
 	v0 = vertex1, v1 = vertex2, v2 = vertex3;
 	material = m;
 	index = id;
 	texture = t;
+	normal = n;
 }
 
 void Triangle::Intersect(Ray& ray)
@@ -29,6 +30,7 @@ void Triangle::Intersect(Ray& ray)
 		ray.objIdx = index;
 		ray.objMaterial = material;
 		ray.objType = ObjectType::TRIANGLE;
+		ray.normal = GetNormal(ray.O + t * ray.D);
 		return;
 	}
 	return;
@@ -36,7 +38,7 @@ void Triangle::Intersect(Ray& ray)
 
 float3 Triangle::GetNormal(const float3& I)
 {
-	return normalize(cross(v1 - v0, v2 - v0));
+	return normal;
 }
 
 float3 Triangle::GetTexture(const float3& I, const float3& N)

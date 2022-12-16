@@ -29,7 +29,7 @@ void Sphere::Intersect(Ray& ray)
 		double u = 0.5 - atan2(normal.z, normal.x) * (1/PI);
 		double v = 0.5 - asin(normal.y) * (1/PI);
 		uvCoords = float2(u, v);
-		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE;
+		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE, ray.normal = GetNormal(ray.O + t * ray.D);
 		return;
 	}
 	t = d - b;
@@ -40,7 +40,7 @@ void Sphere::Intersect(Ray& ray)
 		double u = 0.5 - atan2(normal.z, normal.x) * (1 / PI);
 		double v = 0.5 - asin(normal.y) * (1 / PI);
 		uvCoords = float2(u, v);
-		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE;
+		ray.t = t, ray.objIdx = index, ray.objMaterial = material, ray.objType = ObjectType::SPHERE, ray.normal = GetNormal(ray.O + t * ray.D);
 		return;
 	}
 }

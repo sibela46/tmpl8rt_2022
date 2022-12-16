@@ -1,6 +1,6 @@
 #include "precomp.h"
 
-Light::Light(float3 position)
+Light::Light(const float3& position)
 	: position(position)
 {
 

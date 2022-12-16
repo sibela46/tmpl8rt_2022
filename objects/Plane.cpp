@@ -23,6 +23,7 @@ void Plane::Intersect(Ray& ray)
 		ray.objIdx = index;
 		ray.objMaterial = material;
 		ray.objType = ObjectType::PLANE;
+		ray.normal = normal;
 	}
 }
 

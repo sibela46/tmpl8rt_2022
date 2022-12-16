@@ -1,12 +1,5 @@
 #include "precomp.h"
 
-__declspec(align(32)) struct Bvh::BVHNode
-{
-    float3 aabbMin, aabbMax;
-    uint leftFirst, triCount;
-    bool isLeaf() { return triCount > 0; }
-};
-
 Bvh::Bvh(vector<Triangle> triangles) {
     tri = triangles;
     
@@ -18,15 +11,14 @@ Bvh::Bvh(vector<Triangle> triangles) {
         };
         bvhNodes.push_back(newNode);
     }
-    triIdx[N];
+    
+    triIndices.resize(N);
 }
-
-
 
 void Bvh::BuildBVH()
 {
     // populate triangle index array
-    for (int i = 0; i < N; i++) triIdx[i] = i;
+    for (int i = 0; i < N; i++) triIndices[i] = i;
     // calculate triangle centroids for partitioning
     for (int i = 0; i < N; i++)
         tri[i].centroid = (tri[i].v0 + tri[i].v1 + tri[i].v2) * 0.3333f;
@@ -71,10 +63,10 @@ void Bvh::Subdivide(uint nodeIdx)
     int j = i + node.triCount - 1;
     while (i <= j)
     {
-        if (tri[triIdx[i]].centroid[axis] < splitPos)
+        if (tri[triIndices[i]].centroid[axis] < splitPos)
             i++;
         else
-            swap(triIdx[i], triIdx[j--]);
+            swap(triIndices[i], triIndices[j--]);
     }
     // abort split if one of the sides is empty
     int leftCount = i - node.leftFirst;
@@ -103,7 +95,7 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
     if (node.isLeaf())
     {
         for (uint i = 0; i < node.triCount; i++)
-            tri[triIdx[node.leftFirst + i]].Intersect(ray);
+            tri[triIndices[node.leftFirst + i]].Intersect(ray);
     }
     else
     {
