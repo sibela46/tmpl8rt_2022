@@ -88,7 +88,7 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-//#define WHITTED_STYLE // uncomment for whitted
+#define WHITTED_STYLE // uncomment for whitted
 
 // zlib
 #include "zlib.h"

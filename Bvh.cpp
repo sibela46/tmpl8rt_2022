@@ -1,9 +1,9 @@
 #include "precomp.h"
 
-Bvh::Bvh(vector<Triangle> triangles) {
-    tri = triangles;
+Bvh::Bvh(vector<Primitive> pri) {
+    primitives = pri;
     
-    N = tri.size();
+    N = primitives.size();
     
     for (int i = 0; i < 2 * N; i++) {
         BVHNode newNode = {
@@ -12,19 +12,16 @@ Bvh::Bvh(vector<Triangle> triangles) {
         bvhNodes.push_back(newNode);
     }
     
-    triIndices.resize(N);
+    primitivesIndices.resize(N);
 }
 
 void Bvh::BuildBVH()
 {
     // populate triangle index array
-    for (int i = 0; i < N; i++) triIndices[i] = i;
-    // calculate triangle centroids for partitioning
-    for (int i = 0; i < N; i++)
-        tri[i].centroid = (tri[i].v0 + tri[i].v1 + tri[i].v2) * 0.3333f;
+    for (int i = 0; i < N; i++) primitivesIndices[i] = i;
     // assign all triangles to root node
     BVHNode& root = bvhNodes[rootNodeIdx];
-    root.leftFirst = 0, root.triCount = N;
+    root.leftFirst = 0, root.primitivesCount = N;
     UpdateNodeBounds(rootNodeIdx);
     // subdivide recursively
     Subdivide(rootNodeIdx);
@@ -35,15 +32,23 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
     BVHNode& node = bvhNodes[nodeIdx];
     node.aabbMin = float3(1e30f);
     node.aabbMax = float3(-1e30f);
-    for (uint first = node.leftFirst, i = 0; i < node.triCount; i++)
+    for (uint first = node.leftFirst, i = 0; i < node.primitivesCount; i++)
     {
-        Triangle& leafTri = tri[first + i];
-        node.aabbMin = fminf(node.aabbMin, leafTri.v0);
-        node.aabbMin = fminf(node.aabbMin, leafTri.v1);
-        node.aabbMin = fminf(node.aabbMin, leafTri.v2);
-        node.aabbMax = fmaxf(node.aabbMax, leafTri.v0);
-        node.aabbMax = fmaxf(node.aabbMax, leafTri.v1);
-        node.aabbMax = fmaxf(node.aabbMax, leafTri.v2);
+        Primitive& leafPri = primitives[first + i];
+        if (leafPri.type == ObjectType::TRIANGLE)
+        {
+            node.aabbMin = fminf(node.aabbMin, leafPri.v1);
+            node.aabbMin = fminf(node.aabbMin, leafPri.v2);
+            node.aabbMin = fminf(node.aabbMin, leafPri.v3);
+            node.aabbMax = fmaxf(node.aabbMax, leafPri.v1);
+            node.aabbMax = fmaxf(node.aabbMax, leafPri.v2);
+            node.aabbMax = fmaxf(node.aabbMax, leafPri.v3);
+        }
+        else if (leafPri.type == ObjectType::SPHERE)
+        {
+            node.aabbMin = fminf(node.aabbMin, leafPri.v1-leafPri.size);
+            node.aabbMax = fmaxf(node.aabbMax, leafPri.v1+leafPri.size);
+        }
     }
 }
 
@@ -51,7 +56,7 @@ void Bvh::Subdivide(uint nodeIdx)
 {
     // terminate recursion
     BVHNode& node = bvhNodes[nodeIdx];
-    if (node.triCount <= 2) return;
+    if (node.primitivesCount <= 2) return;
     // determine split axis and position
     float3 extent = node.aabbMax - node.aabbMin;
     int axis = 0;
@@ -60,26 +65,26 @@ void Bvh::Subdivide(uint nodeIdx)
     float splitPos = node.aabbMin[axis] + extent[axis] * 0.5f;
     // in-place partition
     int i = node.leftFirst;
-    int j = i + node.triCount - 1;
+    int j = i + node.primitivesCount - 1;
     while (i <= j)
     {
-        if (tri[triIndices[i]].centroid[axis] < splitPos)
+        if (primitives[primitivesIndices[i]].centroid[axis] < splitPos)
             i++;
         else
-            swap(triIndices[i], triIndices[j--]);
+            swap(primitivesIndices[i], primitivesIndices[j--]);
     }
     // abort split if one of the sides is empty
     int leftCount = i - node.leftFirst;
-    if (leftCount == 0 || leftCount == node.triCount) return;
+    if (leftCount == 0 || leftCount == node.primitivesCount) return;
     // create child nodes
     int leftChildIdx = nodesUsed++;
     int rightChildIdx = nodesUsed++;
     bvhNodes[leftChildIdx].leftFirst = node.leftFirst;
-    bvhNodes[leftChildIdx].triCount = leftCount;
+    bvhNodes[leftChildIdx].primitivesCount = leftCount;
     bvhNodes[rightChildIdx].leftFirst = i;
-    bvhNodes[rightChildIdx].triCount = node.triCount - leftCount;
+    bvhNodes[rightChildIdx].primitivesCount = node.primitivesCount - leftCount;
     node.leftFirst = leftChildIdx;
-    node.triCount = 0;
+    node.primitivesCount = 0;
     UpdateNodeBounds(leftChildIdx);
     UpdateNodeBounds(rightChildIdx);
     // recurse
@@ -94,8 +99,8 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
     if (!IntersectAABB(ray, node.aabbMin, node.aabbMax)) return;
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.triCount; i++)
-            tri[triIndices[node.leftFirst + i]].Intersect(ray);
+        for (uint i = 0; i < node.primitivesCount; i++)
+            primitives[primitivesIndices[node.leftFirst + i]].Intersect(ray);
     }
     else
     {

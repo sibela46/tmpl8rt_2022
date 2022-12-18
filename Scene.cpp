@@ -21,13 +21,26 @@ Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
+	Primitive plane1 = { 0, ObjectType::PLANE, float3(1, 0, 0), float3(1, 0, 0), float3(0), float3(0), float3(1, 0, 0), 2.f, 0.f, 0.f, purpleDiffuse }; // left wall
+	Primitive plane2 = { 1, ObjectType::PLANE, float3(-1, 0, 0), float3(-1, 0, 0), float3(0), float3(0), float3(-1, 0, 0), 2.f, 0.f, 0.f, blueDiffuse }; // right wall
+	Primitive plane3 = { 2, ObjectType::PLANE, float3(0, -1, 0), float3(0, -1, 0), float3(0), float3(0), float3(0, -1, 0), 2.f, 0.f, 0.f, whiteDiffuse }; // ceiling
+	Primitive plane4 = { 3, ObjectType::PLANE, float3(0, 1, 0), float3(0, 1, 0), float3(0), float3(0), float3(0, 1, 0), 1.f, 0.f, 0.f, whiteDiffuse }; // floor wall
+	Primitive plane5 = { 4, ObjectType::PLANE, float3(0, 0, 1), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
+	Primitive plane6 = { 5, ObjectType::PLANE, float3(0, 0, -1), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
 	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
 	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
 	planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
 	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
 	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
-	
+
+	/*primitives.push_back(plane1);
+	primitives.push_back(plane2);
+	primitives.push_back(plane3);
+	primitives.push_back(plane4);
+	primitives.push_back(plane5);
+	primitives.push_back(plane6);*/
+
 	//spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
 	//spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
 	//spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
@@ -41,21 +54,32 @@ Scene::Scene()
 
 	//skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0.f, -0.5f, 0), float3(0.f, -0.5f, 0), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere);
+	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
+
+	bvh = new Bvh(primitives);
+	bvh->BuildBVH();
+
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.5f, 0.0f));
 #else
 	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
 	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
 #endif
-
-	//LoadModelNew(0, "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
-	LoadModelNew(2, "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 }
 
 void Scene::FindNearest(Ray& ray, bool isShadowRay)
 {
 	float t;
+	for (int i = 0; i < planes.size(); ++i)
+	{
+		planes[i].Intersect(ray);
+	}
+	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
 
+	/*
 	for (int i = 0; i < triangles.size(); ++i)
 	{
 		triangles[i].Intersect(ray);
@@ -83,7 +107,7 @@ void Scene::FindNearest(Ray& ray, bool isShadowRay)
 	for (int i = 0; i < planes.size(); ++i)
 	{
 		planes[i].Intersect(ray);
-	}
+	}*/
 }
 
 bool Scene::IsOccluded(const Ray& ray)
@@ -253,7 +277,6 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
 {
-	std::vector<Triangle> mesh;
 	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) ;
 
 	std::string inputfile = fileName;
@@ -315,8 +338,8 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
 				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 			}
-			Triangle newTri = Triangle(triIdx, vertices[0], vertices[1], vertices[2], normal, material);
-			mesh.push_back(newTri);
+			Primitive primitive = { triIdx, ObjectType::TRIANGLE, (vertices[0]+vertices[1]+vertices[2])/0.33333f, vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
+			primitives.push_back(primitive);
 
 			index_offset += fv;
 			triIdx += 1;
@@ -324,10 +347,6 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 			shapes[s].mesh.material_ids[f];
 		}
 	}
-
-	Bvh b(mesh);
-	b.BuildBVH();
-	models.emplace_back(b);
 }
 
 float3 Scene::GetAlbedo(Ray& ray, const float3& N)
