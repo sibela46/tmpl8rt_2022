@@ -29,31 +29,6 @@ void Bvh::BuildBVH()
     Subdivide(rootNodeIdx);
 }
 
-void Bvh::GrowPrimitiveBound(Primitive& primitive, aabb bound)
-{
-    switch (primitive.type)
-    {
-    case ObjectType::TRIANGLE:
-        {
-            bound.Grow(primitive.v1);
-            bound.Grow(primitive.v2);
-            bound.Grow(primitive.v3);
-        }
-        break;
-    case ObjectType::SPHERE:
-        {
-            bound.Grow(primitive.v1 - primitive.size);
-            bound.Grow(primitive.v1 + primitive.size);
-        }
-        break;
-    case ObjectType::PLANE:
-        {
-
-        }
-        break;
-    }
-}
-
 void Bvh::UpdateNodeBounds(uint nodeIdx)
 {
     BVHNode& node = bvhNodes[nodeIdx];
@@ -86,10 +61,8 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 float3 offset = float3((1 - abs(leafPri.n.x)) * HORIZON, (1 - abs(leafPri.n.y)) * HORIZON, (1 - abs(leafPri.n.z)) * HORIZON);
                 printf("id: %d, center: %f %f %f\n", leafPri.index, leafPri.centroid.x, leafPri.centroid.y, leafPri.centroid.z);
                 printf("id: %d, offset: %f %f %f\n", leafPri.index, offset.x, offset.y, offset.z);
-                node.aabbMin = leafPri.centroid - offset;
-                node.aabbMax = leafPri.centroid + offset;
-                printf("id: %d, nodeMin: %f %f %f\n", leafPri.index, node.aabbMin.x, node.aabbMin.y, node.aabbMin.z);
-                printf("id: %d, nodeMax: %f %f %f\n", leafPri.index, node.aabbMax.x, node.aabbMax.y, node.aabbMax.z);
+                node.aabbMin = fminf(node.aabbMin, leafPri.centroid - offset);
+                node.aabbMax = fminf(node.aabbMax, leafPri.centroid + offset);
             }
             break;
         }
@@ -117,11 +90,11 @@ float Bvh::FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis)
             Primitive& primitive = primitives[primitivesIndices[node.leftFirst + i]];
             int binIdx = min(BINS - 1,
                 (int)((primitive.centroid[a] - boundsMin) * scale));
+            bin[binIdx].priCount++;
             switch (primitive.type)
             {
             case ObjectType::TRIANGLE:
                 {
-                    bin[binIdx].priCount++;
                     bin[binIdx].bounds.Grow(primitive.v1);
                     bin[binIdx].bounds.Grow(primitive.v2);
                     bin[binIdx].bounds.Grow(primitive.v3);
@@ -129,14 +102,15 @@ float Bvh::FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis)
                 break;
             case ObjectType::SPHERE:
                 {
-                    bin[binIdx].priCount++;
                     bin[binIdx].bounds.Grow(primitive.v1-primitive.size);
                     bin[binIdx].bounds.Grow(primitive.v1+primitive.size);
                 }
                 break;
             case ObjectType::PLANE:
                 {
-
+                    float3 offset = float3((1 - abs(primitive.n.x)) * HORIZON, (1 - abs(primitive.n.y)) * HORIZON, (1 - abs(primitive.n.z)) * HORIZON);
+                    bin[binIdx].bounds.Grow(primitive.n + offset);
+                    bin[binIdx].bounds.Grow(primitive.n - offset);
                 }
                 break;
             }

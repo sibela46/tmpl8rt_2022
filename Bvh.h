@@ -127,8 +127,6 @@ public:
 	float	CalculateNodeCost(const BVHNode& node);
 	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
 	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
-	float	EvaluateSAH(const BVHNode& node, int axis, float pos);
-	void	GrowPrimitiveBound(Primitive& primitive, aabb bound);
 	void	Subdivide(uint nodeIdx);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
