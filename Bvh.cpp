@@ -84,6 +84,16 @@ void Bvh::GetSAHSplitPosition(uint nodeIdx, float& bestCost, float& bestPos, int
     }
 }
 
+void Bvh::GetMiddleSplitPosition(uint nodeIdx, float& bestPos, int& bestAxis)
+{
+    BVHNode& node = bvhNodes[nodeIdx];
+    float3 extent = node.aabbMax - node.aabbMin;
+    bestAxis = 0;
+    if (extent.y > extent.x) bestAxis = 1;
+    if (extent.z > extent[bestAxis]) bestAxis = 2;
+    bestPos = node.aabbMin[bestAxis] + extent[bestAxis] * 0.5f;
+}
+
 float Bvh::EvaluateSAH(BVHNode& node, int axis, float pos)
 {
     // determine triangle counts and bounds for this split candidate
@@ -119,12 +129,13 @@ void Bvh::Subdivide(uint nodeIdx)
     // determine split axis and position
     int axis = -1;
     float splitPos = 0.f, bestCost = 1e30f;
-    GetSAHSplitPosition(nodeIdx, bestCost, splitPos, axis);
-    // terminate if more expensive than parent
-    float3 e = node.aabbMax - node.aabbMin; // extent of parent
-    float parentArea = e.x * e.y + e.y * e.z + e.z * e.x;
-    float parentCost = node.primitivesCount * parentArea;
-    if (bestCost >= parentCost) return;
+    GetMiddleSplitPosition(nodeIdx, splitPos, axis);
+    //GetSAHSplitPosition(nodeIdx, bestCost, splitPos, axis);
+    //// terminate if more expensive than parent
+    //float3 e = node.aabbMax - node.aabbMin; // extent of parent
+    //float parentArea = e.x * e.y + e.y * e.z + e.z * e.x;
+    //float parentCost = node.primitivesCount * parentArea;
+    //if (bestCost >= parentCost) return;
     // in-place partition
     int i = node.leftFirst;
     int j = i + node.primitivesCount - 1;

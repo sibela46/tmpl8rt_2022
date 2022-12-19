@@ -125,6 +125,7 @@ public:
 	void	BuildBVH();
 	void	UpdateNodeBounds(uint nodeIdx);
 	void	GetSAHSplitPosition(uint nodeIdx, float& bestCost, float& bestPos, int& bestAxis);
+	void	GetMiddleSplitPosition(uint nodeIdx, float& bestPos, int& bestAxis);
 	float	EvaluateSAH(BVHNode& node, int axis, float pos);
 	void	Subdivide(uint nodeIdx);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
