@@ -10,6 +10,27 @@ __declspec(align(32)) struct BVHNode
 
 struct Primitive { 
 	int index; ObjectType type; float3 centroid; float3 v1; float3 v2; float3 v3; float3 n; float size; float u; float v; Material material;
+	void CalculateCentroid()
+	{
+		switch (type)
+		{
+			case ObjectType::TRIANGLE:
+			{
+				centroid = (v1 + v2 + v3) * 0.3333f;
+			}
+			break;
+			case ObjectType::SPHERE:
+			{
+				centroid = v1;
+			}
+			break;
+			case ObjectType::PLANE:
+			{
+				centroid = 0.f;
+			}
+			break;
+		}
+	}
 	void Intersect(Ray& ray)
 	{
 		if (type == ObjectType::TRIANGLE)
@@ -27,6 +48,7 @@ struct Primitive {
 	}
 	void IntersectTriangle(Ray& ray)
 	{
+		centroid = (v1 + v2 + v3) * 0.3333f;
 		float3 edge1 = v2 - v1;
 		float3 edge2 = v3 - v1;
 		float3 h = cross(ray.D, edge2);

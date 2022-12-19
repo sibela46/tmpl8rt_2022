@@ -19,6 +19,8 @@ void Bvh::BuildBVH()
 {
     // populate triangle index array
     for (int i = 0; i < N; i++) primitivesIndices[i] = i;
+    // calculate centroid
+    for (int i = 0; i < N; i++) primitives[i].CalculateCentroid();
     // assign all triangles to root node
     BVHNode& root = bvhNodes[rootNodeIdx];
     root.leftFirst = 0, root.primitivesCount = N;
@@ -35,19 +37,30 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
     for (uint first = node.leftFirst, i = 0; i < node.primitivesCount; i++)
     {
         Primitive& leafPri = primitives[first + i];
-        if (leafPri.type == ObjectType::TRIANGLE)
+        switch (leafPri.type)
         {
-            node.aabbMin = fminf(node.aabbMin, leafPri.v1);
-            node.aabbMin = fminf(node.aabbMin, leafPri.v2);
-            node.aabbMin = fminf(node.aabbMin, leafPri.v3);
-            node.aabbMax = fmaxf(node.aabbMax, leafPri.v1);
-            node.aabbMax = fmaxf(node.aabbMax, leafPri.v2);
-            node.aabbMax = fmaxf(node.aabbMax, leafPri.v3);
-        }
-        else if (leafPri.type == ObjectType::SPHERE)
-        {
-            node.aabbMin = fminf(node.aabbMin, leafPri.v1-leafPri.size);
-            node.aabbMax = fmaxf(node.aabbMax, leafPri.v1+leafPri.size);
+            case ObjectType::TRIANGLE:
+            {
+                node.aabbMin = fminf(node.aabbMin, leafPri.v1);
+                node.aabbMin = fminf(node.aabbMin, leafPri.v2);
+                node.aabbMin = fminf(node.aabbMin, leafPri.v3);
+                node.aabbMax = fmaxf(node.aabbMax, leafPri.v1);
+                node.aabbMax = fmaxf(node.aabbMax, leafPri.v2);
+                node.aabbMax = fmaxf(node.aabbMax, leafPri.v3);
+            }
+            break;
+            case ObjectType::SPHERE:
+            {
+                node.aabbMin = leafPri.v1 - leafPri.size;
+                node.aabbMax = leafPri.v1 + leafPri.size;
+            }
+            break;
+            case ObjectType::PLANE:
+            {
+                node.aabbMin = leafPri.centroid - float3(100.f, 100.f, 0.f);
+                node.aabbMax = leafPri.centroid + float3(100.f, 100.f, 0.f);
+            }
+            break;
         }
     }
 }
@@ -91,7 +104,6 @@ void Bvh::Subdivide(uint nodeIdx)
     Subdivide(leftChildIdx);
     Subdivide(rightChildIdx);
 }
-
 
 void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
 {

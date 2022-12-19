@@ -27,47 +27,39 @@ Scene::Scene()
 	Primitive plane4 = { 3, ObjectType::PLANE, float3(0, 1, 0), float3(0, 1, 0), float3(0), float3(0), float3(0, 1, 0), 1.f, 0.f, 0.f, whiteDiffuse }; // floor wall
 	Primitive plane5 = { 4, ObjectType::PLANE, float3(0, 0, 1), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
 	Primitive plane6 = { 5, ObjectType::PLANE, float3(0, 0, -1), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
-	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
-	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
-	planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
-	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
-
-	/*primitives.push_back(plane1);
+	
+	primitives.push_back(plane1);
 	primitives.push_back(plane2);
 	primitives.push_back(plane3);
 	primitives.push_back(plane4);
 	primitives.push_back(plane5);
-	primitives.push_back(plane6);*/
+	primitives.push_back(plane6);
 
-	//spheres.emplace_back(Sphere(0, float3(-1.3f, 0.f, 0.f), 0.6f, whiteDiffuse, new TextureMap("\\assets\\universe.jpg")));
-	//spheres.emplace_back(Sphere(1, float3(-0.2f, 0.f, 0.f), 0.5f, mirror));
-	//spheres.emplace_back(Sphere(2, float3(0.7f, 0.f, 0.f), 0.4f, glass));
-	//spheres.emplace_back(Sphere(3, float3(1.4f, 0.f, 0.f), 0.3f, purpleDiffuse));
+	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
+	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
+	//planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
+	//planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
+	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
-	//cylinders.emplace_back(Cylinder(0, float3(0.0, -2.f, 3.f), 0.3f, 0.3f, redDiffuse));
-	
-	//cubes.emplace_back(Cube(0, float3(0), float3(0.5f), redDiffuse, mat4::Translate(0.5f, -0.75f, 0.f)*mat4::RotateY(10)));
+	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
-	//triangles.emplace_back(Triangle(0, float3(-1.0f, 0.0f, 0.0f), float3(1.0f, 1.0f, 0.0f), float3(1.0f, 0.0f, 1.0f), whiteDiffuse));
-
-	//skydomeTexture = new TextureMap("\\assets\\sky.jfif");
-
-	Primitive sphere = { 0, ObjectType::SPHERE, float3(0.f, -0.5f, 0), float3(0.f, -0.5f, 0), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere);
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0.f, -0.5f, 1.f), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	//primitives.push_back(sphere);
+	//LoadModelNew(primitives.size(), "assets\\bunny.obj", glass, float3(2.0f, -2.f, 0.0f), 0.5f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
-
-	bvh = new Bvh(primitives);
-	bvh->BuildBVH();
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.5f, 0.0f));
 #else
-	triangles.emplace_back(Triangle(0, float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
-	triangles.emplace_back(Triangle(1, float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), areaLight));
+	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	primitives.push_back(light1);
+	primitives.push_back(light2);
 #endif
+
+	bvh = new Bvh(primitives);
+	bvh->BuildBVH();
 }
 
 void Scene::FindNearest(Ray& ray, bool isShadowRay)
