@@ -57,8 +57,13 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
             break;
             case ObjectType::PLANE:
             {
-                node.aabbMin = leafPri.centroid - float3(100.f, 100.f, 0.f);
-                node.aabbMax = leafPri.centroid + float3(100.f, 100.f, 0.f);
+                float3 offset = float3((1 - abs(leafPri.n.x)) * HORIZON, (1 - abs(leafPri.n.y)) * HORIZON, (1 - abs(leafPri.n.z)) * HORIZON);
+                printf("id: %d, center: %f %f %f\n", leafPri.index, leafPri.centroid.x, leafPri.centroid.y, leafPri.centroid.z);
+                printf("id: %d, offset: %f %f %f\n", leafPri.index, offset.x, offset.y, offset.z);
+                node.aabbMin = leafPri.centroid - offset;
+                node.aabbMax = leafPri.centroid + offset;
+                printf("id: %d, nodeMin: %f %f %f\n", leafPri.index, node.aabbMin.x, node.aabbMin.y, node.aabbMin.z);
+                printf("id: %d, nodeMax: %f %f %f\n", leafPri.index, node.aabbMax.x, node.aabbMax.y, node.aabbMax.z);
             }
             break;
         }

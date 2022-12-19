@@ -21,12 +21,12 @@ Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
 {
-	Primitive plane1 = { 0, ObjectType::PLANE, float3(1, 0, 0), float3(1, 0, 0), float3(0), float3(0), float3(1, 0, 0), 2.f, 0.f, 0.f, purpleDiffuse }; // left wall
-	Primitive plane2 = { 1, ObjectType::PLANE, float3(-1, 0, 0), float3(-1, 0, 0), float3(0), float3(0), float3(-1, 0, 0), 2.f, 0.f, 0.f, blueDiffuse }; // right wall
-	Primitive plane3 = { 2, ObjectType::PLANE, float3(0, -1, 0), float3(0, -1, 0), float3(0), float3(0), float3(0, -1, 0), 2.f, 0.f, 0.f, whiteDiffuse }; // ceiling
-	Primitive plane4 = { 3, ObjectType::PLANE, float3(0, 1, 0), float3(0, 1, 0), float3(0), float3(0), float3(0, 1, 0), 1.f, 0.f, 0.f, whiteDiffuse }; // floor wall
-	Primitive plane5 = { 4, ObjectType::PLANE, float3(0, 0, 1), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
-	Primitive plane6 = { 5, ObjectType::PLANE, float3(0, 0, -1), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
+	Primitive plane1 = { 0, ObjectType::PLANE, float3(0), float3(1, 0, 0), float3(0), float3(0), float3(1, 0, 0), 2.f, 0.f, 0.f, purpleDiffuse }; // left wall
+	Primitive plane2 = { 1, ObjectType::PLANE, float3(0), float3(-1, 0, 0), float3(0), float3(0), float3(-1, 0, 0), 2.f, 0.f, 0.f, blueDiffuse }; // right wall
+	Primitive plane3 = { 2, ObjectType::PLANE, float3(0), float3(0, -1, 0), float3(0), float3(0), float3(0, -1, 0), 2.f, 0.f, 0.f, whiteDiffuse }; // ceiling
+	Primitive plane4 = { 3, ObjectType::PLANE, float3(0), float3(0, 1, 0), float3(0), float3(0), float3(0, 1, 0), 1.f, 0.f, 0.f, whiteDiffuse }; // floor wall
+	Primitive plane5 = { 4, ObjectType::PLANE, float3(0), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
+	Primitive plane6 = { 5, ObjectType::PLANE, float3(0), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
 	
 	primitives.push_back(plane1);
 	primitives.push_back(plane2);
@@ -44,8 +44,8 @@ Scene::Scene()
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
-	Primitive sphere = { 0, ObjectType::SPHERE, float3(0.f, -0.5f, 1.f), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	//primitives.push_back(sphere);
+	Primitive sphere = { primitives.size(), ObjectType::SPHERE, float3(0.f, -0.5f, 1.f), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	primitives.push_back(sphere);
 	//LoadModelNew(primitives.size(), "assets\\bunny.obj", glass, float3(2.0f, -2.f, 0.0f), 0.5f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
@@ -64,11 +64,6 @@ Scene::Scene()
 
 void Scene::FindNearest(Ray& ray, bool isShadowRay)
 {
-	float t;
-	for (int i = 0; i < planes.size(); ++i)
-	{
-		planes[i].Intersect(ray);
-	}
 	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
 
 	/*

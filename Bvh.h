@@ -26,7 +26,7 @@ struct Primitive {
 			break;
 			case ObjectType::PLANE:
 			{
-				centroid = 0.f;
+				centroid = n * size;
 			}
 			break;
 		}
