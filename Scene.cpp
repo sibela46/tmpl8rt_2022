@@ -28,19 +28,19 @@ Scene::Scene()
 	Primitive plane5 = { 4, ObjectType::PLANE, float3(0), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
 	Primitive plane6 = { 5, ObjectType::PLANE, float3(0), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
 	
-	primitives.push_back(plane1);
-	primitives.push_back(plane2);
-	primitives.push_back(plane3);
-	primitives.push_back(plane4);
-	primitives.push_back(plane5);
-	primitives.push_back(plane6);
+	//primitives.push_back(plane1);
+	//primitives.push_back(plane2);
+	//primitives.push_back(plane3);
+	//primitives.push_back(plane4);
+	//primitives.push_back(plane5);
+	//primitives.push_back(plane6);
 
-	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
-	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
-	//planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
-	//planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
-	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
+	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
+	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
+	planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
+	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
+	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
@@ -64,6 +64,10 @@ Scene::Scene()
 
 void Scene::FindNearest(Ray& ray, bool isShadowRay)
 {
+	for (int i = 0; i < planes.size(); ++i)
+	{
+		planes[i].Intersect(ray);
+	}
 	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
 
 	/*

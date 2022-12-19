@@ -116,7 +116,7 @@ struct Primitive {
 		}
 	}
 };
-struct Bin { aabb bounds; int triCount = 0; };
+struct Bin { aabb bounds; int priCount = 0; };
 
 class Bvh
 {
@@ -124,6 +124,8 @@ public:
 	Bvh(vector<Primitive> primitives);
 	void	BuildBVH();
 	void	UpdateNodeBounds(uint nodeIdx);
+	void	GetSAHSplitPosition(uint nodeIdx, float& bestCost, float& bestPos, int& bestAxis);
+	float	EvaluateSAH(BVHNode& node, int axis, float pos);
 	void	Subdivide(uint nodeIdx);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
