@@ -4,8 +4,8 @@
 
 
 // default screen resolution
-#define SCRWIDTH	1280
-#define SCRHEIGHT	720
+#define SCRWIDTH	400
+#define SCRHEIGHT	300
 // #define FULLSCREEN
 // #define DOUBLESIZE
 

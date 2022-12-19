@@ -44,8 +44,12 @@ Scene::Scene()
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
-	Primitive sphere = { primitives.size(), ObjectType::SPHERE, float3(0.f, -0.5f, 1.f), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
 	primitives.push_back(sphere);
+	Primitive sphere1 = { 1, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	primitives.push_back(sphere1);
+	Primitive sphere2 = { 2, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	primitives.push_back(sphere2);
 	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
@@ -329,7 +333,7 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
 				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 			}
-			Primitive primitive = { triIdx, ObjectType::TRIANGLE, (vertices[0]+vertices[1]+vertices[2])/0.33333f, vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
+			Primitive primitive = { triIdx, ObjectType::TRIANGLE, float3(0), vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
 			primitives.push_back(primitive);
 
 			index_offset += fv;
