@@ -6,7 +6,7 @@ public:
 	Scene();
 	virtual ~Scene() = default;
 
-	void FindNearest(Ray& ray, bool isShadowRay);
+	void FindNearest(Ray& ray);
 	bool IsOccluded(const Ray& ray);
 	float3 GetBeersLaw(Ray& ray);
 	float3 GetNormal(int idx, ObjectType type, const float3& I, const float3& D);
