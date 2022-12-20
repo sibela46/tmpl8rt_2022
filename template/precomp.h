@@ -1724,6 +1724,7 @@ struct Material
 #include "objects/Cube.h"
 #include "objects/Cylinder.h"
 #include "Bvh.h"
+#include "BvhQB.h"
 #include "Scene.h"
 #include "camera.h"
 #include "renderer.h"

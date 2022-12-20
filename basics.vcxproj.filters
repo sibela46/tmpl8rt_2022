@@ -31,6 +31,7 @@
       <Filter>objects</Filter>
     </ClCompile>
     <ClCompile Include="Bvh.cpp" />
+    <ClCompile Include="BvhQB.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -70,6 +71,7 @@
       <Filter>objects</Filter>
     </ClInclude>
     <ClInclude Include="Bvh.h" />
+    <ClInclude Include="BvhQB.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
