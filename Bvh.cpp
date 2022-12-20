@@ -36,7 +36,8 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
     node.aabbMax = float3(-1e30f);
     for (uint first = node.leftFirst, i = 0; i < node.primitivesCount; i++)
     {
-        Primitive& leafPri = primitives[first + i];
+        int primitiveIdx = primitivesIndices[first + i];
+        Primitive& leafPri = primitives[primitiveIdx];
         switch (leafPri.type)
         {
             case ObjectType::TRIANGLE:
@@ -51,8 +52,8 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
             break;
             case ObjectType::SPHERE:
             {
-                node.aabbMin = leafPri.v1 - leafPri.size;
-                node.aabbMax = leafPri.v1 + leafPri.size;
+                node.aabbMin = fminf(node.aabbMin, leafPri.v1 - leafPri.size);
+                node.aabbMax = fmaxf(node.aabbMax, leafPri.v1 + leafPri.size);
             }
             break;
             case ObjectType::PLANE:
@@ -60,33 +61,101 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 float3 offset = float3((1 - abs(leafPri.n.x)) * HORIZON, (1 - abs(leafPri.n.y)) * HORIZON, (1 - abs(leafPri.n.z)) * HORIZON);
                 printf("id: %d, center: %f %f %f\n", leafPri.index, leafPri.centroid.x, leafPri.centroid.y, leafPri.centroid.z);
                 printf("id: %d, offset: %f %f %f\n", leafPri.index, offset.x, offset.y, offset.z);
-                node.aabbMin = leafPri.centroid - offset;
-                node.aabbMax = leafPri.centroid + offset;
-                printf("id: %d, nodeMin: %f %f %f\n", leafPri.index, node.aabbMin.x, node.aabbMin.y, node.aabbMin.z);
-                printf("id: %d, nodeMax: %f %f %f\n", leafPri.index, node.aabbMax.x, node.aabbMax.y, node.aabbMax.z);
+                node.aabbMin = fminf(node.aabbMin, leafPri.centroid - offset);
+                node.aabbMax = fminf(node.aabbMax, leafPri.centroid + offset);
             }
             break;
         }
     }
 }
 
-void Bvh::GetSAHSplitPosition(uint nodeIdx, float& bestCost, float& bestPos, int& bestAxis)
+float Bvh::FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis)
 {
-    // determine split axis using SAH
-    BVHNode& node = bvhNodes[nodeIdx];
-    for (int axis = 0; axis < 3; axis++) for (uint i = 0; i < node.primitivesCount; i++)
+    float bestCost = 1e30f;
+    for (int a = 0; a < 3; a++)
     {
-        Primitive& triangle = primitives[primitivesIndices[node.leftFirst + i]];
-        float candidatePos = triangle.centroid[axis];
-        float cost = EvaluateSAH(node, axis, candidatePos);
-        if (cost < bestCost)
-            bestPos = candidatePos, bestAxis = axis, bestCost = cost;
+        float boundsMin = 1e30f, boundsMax = -1e30f;
+        for (int i = 0; i < node.primitivesCount; i++)
+        {
+            Primitive& primitive = primitives[primitivesIndices[node.leftFirst + i]];
+            boundsMin = min(boundsMin, primitive.centroid[a]);
+            boundsMax = max(boundsMax, primitive.centroid[a]);
+        }
+        if (boundsMin == boundsMax) continue;
+        // populate the bins
+        Bin bin[BINS];
+        float scale = BINS / (boundsMax - boundsMin);
+        for (uint i = 0; i < node.primitivesCount; i++)
+        {
+            Primitive& primitive = primitives[primitivesIndices[node.leftFirst + i]];
+            int binIdx = min(BINS - 1,
+                (int)((primitive.centroid[a] - boundsMin) * scale));
+            bin[binIdx].priCount++;
+            switch (primitive.type)
+            {
+            case ObjectType::TRIANGLE:
+                {
+                    bin[binIdx].bounds.Grow(primitive.v1);
+                    bin[binIdx].bounds.Grow(primitive.v2);
+                    bin[binIdx].bounds.Grow(primitive.v3);
+                }
+                break;
+            case ObjectType::SPHERE:
+                {
+                    bin[binIdx].bounds.Grow(primitive.v1-primitive.size);
+                    bin[binIdx].bounds.Grow(primitive.v1+primitive.size);
+                }
+                break;
+            case ObjectType::PLANE:
+                {
+                    float3 offset = float3((1 - abs(primitive.n.x)) * HORIZON,
+                                           (1 - abs(primitive.n.y)) * HORIZON,
+                                           (1 - abs(primitive.n.z)) * HORIZON);
+                    bin[binIdx].bounds.Grow(primitive.n + offset);
+                    bin[binIdx].bounds.Grow(primitive.n - offset);
+                }
+                break;
+            }
+        }
+        // gather data for the 7 planes between the 8 bins
+        float leftArea[BINS - 1], rightArea[BINS - 1];
+        int leftCount[BINS - 1], rightCount[BINS - 1];
+        aabb leftBox, rightBox;
+        int leftSum = 0, rightSum = 0;
+        for (int i = 0; i < BINS - 1; i++)
+        {
+            leftSum += bin[i].priCount;
+            leftCount[i] = leftSum;
+            leftBox.Grow(bin[i].bounds);
+            leftArea[i] = leftBox.Area();
+            rightSum += bin[BINS - 1 - i].priCount;
+            rightCount[BINS - 2 - i] = rightSum;
+            rightBox.Grow(bin[BINS - 1 - i].bounds);
+            rightArea[BINS - 2 - i] = rightBox.Area();
+        }
+        // calculate SAH cost for the 7 planes
+        scale = (boundsMax - boundsMin) / BINS;
+        for (int i = 0; i < BINS - 1; i++)
+        {
+            float planeCost =
+                leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+            if (planeCost < bestCost)
+                axis = a, splitPos = boundsMin + scale * (i + 1),
+                bestCost = planeCost;
+        }
     }
+    return bestCost;
 }
 
-void Bvh::GetMiddleSplitPosition(uint nodeIdx, float& bestPos, int& bestAxis)
+float Bvh::CalculateNodeCost(const BVHNode& node)
 {
-    BVHNode& node = bvhNodes[nodeIdx];
+    float3 e = node.aabbMax - node.aabbMin; // extent of the node
+    float surfaceArea = e.x * e.y + e.y * e.z + e.z * e.x;
+    return node.primitivesCount * surfaceArea;
+}
+
+void Bvh::GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis)
+{
     float3 extent = node.aabbMax - node.aabbMin;
     bestAxis = 0;
     if (extent.y > extent.x) bestAxis = 1;
@@ -94,49 +163,17 @@ void Bvh::GetMiddleSplitPosition(uint nodeIdx, float& bestPos, int& bestAxis)
     bestPos = node.aabbMin[bestAxis] + extent[bestAxis] * 0.5f;
 }
 
-float Bvh::EvaluateSAH(BVHNode& node, int axis, float pos)
-{
-    // determine triangle counts and bounds for this split candidate
-    aabb leftBox, rightBox;
-    int leftCount = 0, rightCount = 0;
-    for (uint i = 0; i < node.primitivesCount; i++)
-    {
-        Primitive& triangle = primitives[primitivesIndices[node.leftFirst + i]];
-        if (triangle.centroid[axis] < pos)
-        {
-            leftCount++;
-            leftBox.Grow(triangle.v1);
-            leftBox.Grow(triangle.v2);
-            leftBox.Grow(triangle.v3);
-        }
-        else
-        {
-            rightCount++;
-            rightBox.Grow(triangle.v1);
-            rightBox.Grow(triangle.v2);
-            rightBox.Grow(triangle.v3);
-        }
-    }
-    float cost = leftCount * leftBox.Area() + rightCount * rightBox.Area();
-    return cost > 0 ? cost : 1e30f;
-}
-
 void Bvh::Subdivide(uint nodeIdx)
 {
     // terminate recursion
     BVHNode& node = bvhNodes[nodeIdx];
-    if (node.primitivesCount <= 2) return;
     // determine split axis and position
-    int axis = -1;
-    float splitPos = 0.f, bestCost = 1e30f;
-    GetMiddleSplitPosition(nodeIdx, splitPos, axis);
-    //GetSAHSplitPosition(nodeIdx, bestCost, splitPos, axis);
-    //// terminate if more expensive than parent
-    //float3 e = node.aabbMax - node.aabbMin; // extent of parent
-    //float parentArea = e.x * e.y + e.y * e.z + e.z * e.x;
-    //float parentCost = node.primitivesCount * parentArea;
-    //if (bestCost >= parentCost) return;
-    // in-place partition
+    int axis;
+    float splitPos;
+    float splitCost = FindBestSplitPlane(node, splitPos, axis);
+    float noSplitCost = CalculateNodeCost(node);
+    if (splitCost >= noSplitCost) return;
+    //GetMiddleSplitPosition(node, splitPos, axis);
     int i = node.leftFirst;
     int j = i + node.primitivesCount - 1;
     while (i <= j)
@@ -181,6 +218,23 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
     }
 }
 
+void Bvh::IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitObject)
+{
+    if (hitObject) return;
+    BVHNode& node = bvhNodes[nodeIdx];
+    if (!IntersectAABB(O, D, distToLight, node.aabbMin, node.aabbMax)) return;
+    if (node.isLeaf())
+    {
+        for (uint i = 0; i < node.primitivesCount; i++)
+            primitives[primitivesIndices[node.leftFirst + i]].Intersect(O, D, distToLight, hitObject);
+    }
+    else
+    {
+        IntersectBVH(O, D, node.leftFirst, distToLight, hitObject);
+        IntersectBVH(O, D, node.leftFirst + 1, distToLight, hitObject);
+    }
+}
+
 bool Bvh::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
 {
     float tx1 = (bmin.x - ray.O.x) / ray.D.x, tx2 = (bmax.x - ray.O.x) / ray.D.x;
@@ -189,5 +243,16 @@ bool Bvh::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
     tmin = max(tmin, min(ty1, ty2)), tmax = min(tmax, max(ty1, ty2));
     float tz1 = (bmin.z - ray.O.z) / ray.D.z, tz2 = (bmax.z - ray.O.z) / ray.D.z;
     tmin = max(tmin, min(tz1, tz2)), tmax = min(tmax, max(tz1, tz2));
-    return tmax >= tmin && tmin < ray.t&& tmax > 0;
+    return tmax >= tmin && tmin < ray.t && tmax > 0;
+}
+
+bool Bvh::IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax)
+{
+    float tx1 = (bmin.x - O.x) / D.x, tx2 = (bmax.x - O.x) / D.x;
+    float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
+    float ty1 = (bmin.y - O.y) / D.y, ty2 = (bmax.y - O.y) / D.y;
+    tmin = max(tmin, min(ty1, ty2)), tmax = min(tmax, max(ty1, ty2));
+    float tz1 = (bmin.z - O.z) / D.z, tz2 = (bmax.z - O.z) / D.z;
+    tmin = max(tmin, min(tz1, tz2)), tmax = min(tmax, max(tz1, tz2));
+    return tmax >= tmin && tmin < distToLight && tmax > 0;
 }

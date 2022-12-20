@@ -28,12 +28,12 @@ Scene::Scene()
 	Primitive plane5 = { 4, ObjectType::PLANE, float3(0), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
 	Primitive plane6 = { 5, ObjectType::PLANE, float3(0), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
 	
-	//primitives.push_back(plane1);
-	//primitives.push_back(plane2);
-	//primitives.push_back(plane3);
-	//primitives.push_back(plane4);
-	//primitives.push_back(plane5);
-	//primitives.push_back(plane6);
+	/*primitives.push_back(plane1);
+	primitives.push_back(plane2);
+	primitives.push_back(plane3);
+	primitives.push_back(plane4);
+	primitives.push_back(plane5);
+	primitives.push_back(plane6);*/
 
 	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
 	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
@@ -44,16 +44,20 @@ Scene::Scene()
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
-	Primitive sphere = { primitives.size(), ObjectType::SPHERE, float3(0.f, -0.5f, 1.f), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
-	primitives.push_back(sphere);
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(2.0f, -2.f, 0.0f), 0.5f);
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	//primitives.push_back(sphere);
+	Primitive sphere1 = { 1, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	//primitives.push_back(sphere1);
+	Primitive sphere2 = { 2, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	//primitives.push_back(sphere2);
+	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.5f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 0.5f, 0.0f));
 #else
-	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.f, 1.8f, 1.f), float3(-1.f, 1.8f, -1.f), float3(1.f, 1.8f, 1.f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, 1.5f), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
 	primitives.push_back(light1);
 	primitives.push_back(light2);
 #endif
@@ -62,43 +66,13 @@ Scene::Scene()
 	bvh->BuildBVH();
 }
 
-void Scene::FindNearest(Ray& ray, bool isShadowRay)
+void Scene::FindNearest(Ray& ray)
 {
 	for (int i = 0; i < planes.size(); ++i)
 	{
 		planes[i].Intersect(ray);
 	}
 	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
-
-	/*
-	for (int i = 0; i < triangles.size(); ++i)
-	{
-		triangles[i].Intersect(ray);
-	}
-	for (int i = 0; i < models.size(); ++i)
-	{
-		models[i].IntersectBVH(ray, Bvh::rootNodeIdx);
-	}
-	for (int i = 0; i < spheres.size(); ++i)
-	{
-		spheres[i].Intersect(ray);
-	}
-	for (int i = 0; i < cubes.size(); ++i)
-	{
-		cubes[i].Intersect(ray);
-	}
-	for (int i = 0; i < tori.size(); ++i)
-	{
-		tori[i].Intersect(ray);
-	}
-	for (int i = 0; i < cylinders.size(); ++i)
-	{
-		cylinders[i].Intersect(ray);
-	}
-	for (int i = 0; i < planes.size(); ++i)
-	{
-		planes[i].Intersect(ray);
-	}*/
 }
 
 bool Scene::IsOccluded(const Ray& ray)
@@ -108,9 +82,10 @@ bool Scene::IsOccluded(const Ray& ray)
 	float3 origin = ray.inside ? I - bias : I + bias;
 	float3 dirToLight = (light->position - I);
 	Ray rayToLight = Ray(origin, normalize(dirToLight));
-	FindNearest(rayToLight, true);
+	bool hitSomething = false;
+	bvh->IntersectBVH(rayToLight.O, rayToLight.D, Bvh::rootNodeIdx, length(dirToLight), hitSomething);
 
-	return rayToLight.t*rayToLight.t < dot(dirToLight, dirToLight);
+	return hitSomething;
 }
 
 float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3& D)
@@ -268,8 +243,8 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
 {
-	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) ;
-
+	mat4 rotate = mat4::RotateY(0);
+	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) * rotate;
 	std::string inputfile = fileName;
 	tinyobj::ObjReaderConfig reader_config;
 	reader_config.mtl_search_path = "./"; // Path to material files
@@ -329,7 +304,7 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
 				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 			}
-			Primitive primitive = { triIdx, ObjectType::TRIANGLE, (vertices[0]+vertices[1]+vertices[2])/0.33333f, vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
+			Primitive primitive = { triIdx, ObjectType::TRIANGLE, float3(0), vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
 			primitives.push_back(primitive);
 
 			index_offset += fv;

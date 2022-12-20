@@ -33,17 +33,44 @@ struct Primitive {
 	}
 	void Intersect(Ray& ray)
 	{
-		if (type == ObjectType::TRIANGLE)
+		switch (type)
 		{
-			IntersectTriangle(ray);
+		case ObjectType::TRIANGLE:
+			{
+				IntersectTriangle(ray);
+			}
+			break;
+		case ObjectType::SPHERE:
+			{
+				IntersectSphere(ray);
+			}
+			break;
+		case ObjectType::PLANE:
+			{
+				IntersectPlane(ray);
+			}
+			break;
 		}
-		else if (type == ObjectType::PLANE)
+	}
+	void Intersect(const float3& O, const float3& D, const float distToLight, bool& hitObject)
+	{
+		switch (type)
 		{
-			IntersectPlane(ray);
+		case ObjectType::TRIANGLE:
+		{
+			IntersectTriangle(O, D, distToLight, hitObject);
 		}
-		else if (type == ObjectType::SPHERE)
+		break;
+		case ObjectType::SPHERE:
 		{
-			IntersectSphere(ray);
+			IntersectSphere(O, D, distToLight, hitObject);
+		}
+		break;
+		case ObjectType::PLANE:
+		{
+			IntersectPlane(O, D, distToLight, hitObject);
+		}
+		break;
 		}
 	}
 	void IntersectTriangle(Ray& ray)
@@ -74,6 +101,29 @@ struct Primitive {
 		}
 		return;
 	}
+	void IntersectTriangle(const float3& O, const float3& D, const float distToLight, bool& hitObject)
+	{
+		centroid = (v1 + v2 + v3) * 0.3333f;
+		float3 edge1 = v2 - v1;
+		float3 edge2 = v3 - v1;
+		float3 h = cross(D, edge2);
+		float a = dot(edge1, h);
+		if (a > -EPSILON && a < EPSILON) return; // the ray is parallel to the triangle	
+		float f = 1.0 / a;
+		float3 s = O - v1;
+		u = f * dot(s, h);
+		if (u < 0.0 || u > 1.0) return;
+		float3 q = cross(s, edge1);
+		v = f * dot(D, q);
+		if (v < 0.0 || u + v > 1.0) return;
+		float t = f * dot(edge2, q);
+		if (t > EPSILON && t < distToLight)
+		{
+			hitObject = true;
+			return;
+		}
+		return;
+	}
 	void IntersectPlane(Ray& ray)
 	{
 		float t = -(dot(ray.O, n) + size) / (dot(ray.D, n));
@@ -85,6 +135,14 @@ struct Primitive {
 			ray.objType = ObjectType::PLANE;
 			ray.normal = n;
 			ray.inside = dot(ray.D, n) > 0;
+		}
+	}
+	void IntersectPlane(float3 O, float3 D, const float distToLight, bool& hitObject)
+	{
+		float t = -(dot(O, n) + size) / (dot(D, n));
+		if (t < distToLight && t > 0)
+		{
+			hitObject = true;
 		}
 	}
 	void IntersectSphere(Ray& ray)
@@ -115,6 +173,26 @@ struct Primitive {
 			return;
 		}
 	}
+	void IntersectSphere(float3 O, float3 D, const float distToLight, bool& hitObject)
+	{
+		float3 oc = O - v1;
+		float b = dot(oc, D);
+		float c = dot(oc, oc) - size * size;
+		float t, d = b * b - c;
+		if (d <= 0) return;
+		d = sqrtf(d), t = -b - d;
+		if (t > 0 && t < distToLight)
+		{
+			hitObject = true;
+			return;
+		}
+		t = d - b;
+		if (t > 0 && t < distToLight)
+		{
+			hitObject = true;
+			return;
+		}
+	}
 };
 struct Bin { aabb bounds; int priCount = 0; };
 
@@ -124,12 +202,14 @@ public:
 	Bvh(vector<Primitive> primitives);
 	void	BuildBVH();
 	void	UpdateNodeBounds(uint nodeIdx);
-	void	GetSAHSplitPosition(uint nodeIdx, float& bestCost, float& bestPos, int& bestAxis);
-	void	GetMiddleSplitPosition(uint nodeIdx, float& bestPos, int& bestAxis);
-	float	EvaluateSAH(BVHNode& node, int axis, float pos);
+	float	CalculateNodeCost(const BVHNode& node);
+	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
+	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
 	void	Subdivide(uint nodeIdx);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
+	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
+	bool	IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax);
 public:
 	static const uint rootNodeIdx = 0;
 	uint nodesUsed = 1;
