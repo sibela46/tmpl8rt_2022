@@ -50,11 +50,29 @@ Scene::Scene()
 	//primitives.push_back(sphere1);
 	Primitive sphere2 = { 2, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
 	//primitives.push_back(sphere2);
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.5f);
+	Primitive sphere3 = { 3, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	//primitives.push_back(sphere3);
+	Primitive sphere4 = { 4, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	//primitives.push_back(sphere4);
+	Primitive sphere5 = { 5, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	//primitives.push_back(sphere5);
+	/*Primitive sphere6 = { 6, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere6);
+	Primitive sphere7 = { 7, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere7);
+	Primitive sphere8 = { 8, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere8);
+	Primitive sphere9 = { 9, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere9);
+	Primitive sphere10 = { 10, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere10);
+	Primitive sphere11 = { 11, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
+	primitives.push_back(sphere11);*/
+	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -1.f, 1.0f), 1.f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(0.f, 0.5f, 0.0f));
+	light = new Light(float3(0.f, 0.8f, 0.0f));
 #else
 	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
 	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, 1.5f), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
@@ -64,6 +82,8 @@ Scene::Scene()
 
 	bvh = new Bvh(primitives);
 	bvh->BuildBVH();
+
+	bvh->CollapseBVH(Bvh::rootNodeIdx);
 }
 
 void Scene::FindNearest(Ray& ray)
@@ -72,7 +92,7 @@ void Scene::FindNearest(Ray& ray)
 	{
 		planes[i].Intersect(ray);
 	}
-	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
+	bvh->IntersectQBVH(ray, Bvh::rootNodeIdx);
 }
 
 bool Scene::IsOccluded(const Ray& ray)
@@ -243,7 +263,7 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 
 void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
 {
-	mat4 rotate = mat4::RotateY(0);
+	mat4 rotate = mat4::RotateY(180);
 	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) * rotate;
 	std::string inputfile = fileName;
 	tinyobj::ObjReaderConfig reader_config;

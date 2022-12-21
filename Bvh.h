@@ -8,6 +8,12 @@ __declspec(align(32)) struct BVHNode
 	bool isLeaf() { return primitivesCount > 0; }
 };
 
+__declspec(align(128)) struct QBVHNode {
+	float3 aabbMin[4];
+	float3 aabbMax[4];
+	int child[4], count[4];
+};
+
 struct Primitive { 
 	int index; ObjectType type; float3 centroid; float3 v1; float3 v2; float3 v3; float3 n; float size; float u; float v; Material material;
 	void CalculateCentroid()
@@ -201,14 +207,18 @@ class Bvh
 public:
 	Bvh(vector<Primitive> primitives);
 	void	BuildBVH();
+	void	CollapseBVH(uint nodeIdx);
 	void	UpdateNodeBounds(uint nodeIdx);
 	float	CalculateNodeCost(const BVHNode& node);
 	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
 	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
 	void	Subdivide(uint nodeIdx);
+	void	ResetNodesUsed();
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
+	void	IntersectQBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
+	float	IntersectAABB_SSE(const Ray& ray, const __m128& bmin4, const __m128& bmax4);
 	bool	IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax);
 public:
 	static const uint rootNodeIdx = 0;
@@ -216,5 +226,6 @@ public:
 	std::vector<Primitive> primitives;
 	int N;
 	std::vector<BVHNode> bvhNodes;
+	std::vector<QBVHNode> qbvhNodes;
 	std::vector<int> primitivesIndices;
 };
