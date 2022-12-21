@@ -14,8 +14,12 @@ Bvh::Bvh(vector<Primitive> pri) {
 
     for (int i = 0; i < 2 * N; i++) {
         QBVHNode newNode = {
-            float3(1e30f), float3(-1e30f), 0, 0
+            -1e30f, 1e30f, 0, 0
         };
+        newNode.child[0] = -1;
+        newNode.child[1] = -1;
+        newNode.child[2] = -1;
+        newNode.child[3] = -1;
         qbvhNodes.push_back(newNode);
     }
     
@@ -49,27 +53,30 @@ void Bvh::CollapseBVH(uint nodeIdx)
     int leftChildIdx = node.leftFirst;
     BVHNode& leftChild = bvhNodes[leftChildIdx];
 
+    int i = 0;
     if (leftChild.isLeaf())
     {
-        newNode.aabbMin[0] = leftChild.aabbMin;
-        newNode.aabbMax[0] = leftChild.aabbMax;
-        newNode.child[0] = leftChild.leftFirst;
-        newNode.count[0] = leftChild.primitivesCount;
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = leftChild.leftFirst;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
     }
     else
     {
-        newNode.aabbMin[0] = leftChild.aabbMin;
-        newNode.aabbMax[0] = leftChild.aabbMax;
-        newNode.child[0] = leftChildIdx;
-        newNode.count[0] = leftChild.primitivesCount;
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = node.leftFirst;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = node.leftFirst+1;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
 
-        newNode.aabbMin[1] = leftChild.aabbMin;
-        newNode.aabbMax[1] = leftChild.aabbMax;
-        newNode.child[1] = leftChild.leftFirst+1;
-        newNode.count[1] = leftChild.primitivesCount;
-
-        CollapseBVH(leftChild.leftFirst);
-        CollapseBVH(leftChild.leftFirst+1);
+        CollapseBVH(node.leftFirst);
+        CollapseBVH(node.leftFirst + 1);
     }
 
     int rightChildIdx = node.leftFirst + 1;
@@ -77,25 +84,25 @@ void Bvh::CollapseBVH(uint nodeIdx)
 
     if (rightChild.isLeaf())
     {
-        newNode.aabbMin[1] = rightChild.aabbMin;
-        newNode.aabbMax[1] = rightChild.aabbMax;
-        newNode.child[1] = rightChild.leftFirst;
-        newNode.count[1] = rightChild.primitivesCount;
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = rightChild.leftFirst;
+        newNode.count[i] = rightChild.primitivesCount;
+        i++;
     }
     else
     {
-        newNode.aabbMin[2] = rightChild.aabbMin;
-        newNode.aabbMax[2] = rightChild.aabbMax;
-        newNode.child[2] = rightChild.leftFirst;
-        newNode.count[2] = rightChild.primitivesCount;
-
-        newNode.aabbMin[3] = rightChild.aabbMin;
-        newNode.aabbMax[3] = rightChild.aabbMax;
-        newNode.child[3] = rightChild.leftFirst + 1;
-        newNode.count[3] = rightChild.primitivesCount;
-
-        CollapseBVH(rightChild.leftFirst);
-        CollapseBVH(rightChild.leftFirst + 1);
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = node.leftFirst;
+        newNode.count[i] = rightChild.primitivesCount;
+        i++;
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = node.leftFirst + 1;
+        newNode.count[i] = rightChild.primitivesCount;
+        CollapseBVH(node.leftFirst);
+        CollapseBVH(node.leftFirst + 1);
     }
 }
 
@@ -276,7 +283,8 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
     QBVHNode& node = qbvhNodes[nodeIdx];
     for (int c = 0; c < 4; c++)
     {
-        if (node.child[c] == 0) continue;
+        if (node.child[c] == -1) continue;
+        if (!IntersectAABB(ray, node.aabbMin[c], node.aabbMax[c])) continue;
 
         if (node.count[c] > 0) // isLeaf
         {
@@ -287,7 +295,6 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
         }
         else
         {
-            if (!IntersectAABB(ray, node.aabbMin[c], node.aabbMax[c])) continue;
 
             IntersectQBVH(ray, node.child[c]);
         }
