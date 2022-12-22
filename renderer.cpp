@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 20) return 0;// scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 20) return float3(1);// scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -172,7 +172,13 @@ void Renderer::Tick( float deltaTime )
 
 void Renderer::KeyDown(int key)
 {
-
+	if (key == 67) // C key pressed
+	{
+		camera.RotateX(10.f);
+		camera.Translate(0.f, 0.f, -10.f);
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+	}
 }
 
 void Renderer::MouseUp(int button)

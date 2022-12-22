@@ -16,7 +16,7 @@ public:
 	float3 GetSkydomeTexture(const Ray& ray);
 
 	void LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale);
-	void LoadModelNew(int idx, const char* fileName, Material material, const float3& offset, float scale);
+	void LoadModelNew(int idx, const char* fileName, Material material, const float3& offset, float scale, float angle);
 
 public:
 	std::vector<Triangle> triangles;

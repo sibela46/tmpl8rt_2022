@@ -35,12 +35,12 @@ Scene::Scene()
 	primitives.push_back(plane5);
 	primitives.push_back(plane6);*/
 
-	planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
-	planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
-	planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
-	planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
-	planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
+	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
+	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
+	//planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
+	//planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
+	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
+	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
 	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
 
@@ -68,11 +68,11 @@ Scene::Scene()
 	primitives.push_back(sphere10);
 	Primitive sphere11 = { 11, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
 	primitives.push_back(sphere11);*/
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -1.f, 1.0f), 1.f);
+	LoadModelNew(primitives.size(), "assets\\lucy.obj", whiteDiffuse, float3(0.0f, -1.f, 1.0f), 0.05f, 0.f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(0.f, 0.8f, 0.0f));
+	light = new Light(float3(-5.f, 0.0f, 0.0f));
 #else
 	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
 	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, 1.5f), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
@@ -261,9 +261,9 @@ void Scene::LoadModel(int idx, const char* fileName, Material material, const fl
 	}
 }
 
-void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale)
+void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale, float angle)
 {
-	mat4 rotate = mat4::RotateY(180);
+	mat4 rotate = mat4::RotateY(angle);
 	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) * rotate;
 	std::string inputfile = fileName;
 	tinyobj::ObjReaderConfig reader_config;

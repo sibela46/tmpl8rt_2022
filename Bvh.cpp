@@ -45,65 +45,25 @@ void Bvh::CollapseBVH(uint nodeIdx)
     BVHNode& node = bvhNodes[nodeIdx];
     QBVHNode& newNode = qbvhNodes[nodeIdx];
 
-    if (node.isLeaf())
-    {
-        return;
-    }
+    if (node.isLeaf()) return;
 
     int leftChildIdx = node.leftFirst;
     BVHNode& leftChild = bvhNodes[leftChildIdx];
-
-    int i = 0;
-    if (leftChild.isLeaf())
-    {
-        newNode.aabbMin[i] = leftChild.aabbMin;
-        newNode.aabbMax[i] = leftChild.aabbMax;
-        newNode.child[i] = leftChild.leftFirst;
-        newNode.count[i] = leftChild.primitivesCount;
-        i++;
-    }
-    else
-    {
-        newNode.aabbMin[i] = leftChild.aabbMin;
-        newNode.aabbMax[i] = leftChild.aabbMax;
-        newNode.child[i] = node.leftFirst;
-        newNode.count[i] = leftChild.primitivesCount;
-        i++;
-        newNode.aabbMin[i] = leftChild.aabbMin;
-        newNode.aabbMax[i] = leftChild.aabbMax;
-        newNode.child[i] = node.leftFirst+1;
-        newNode.count[i] = leftChild.primitivesCount;
-        i++;
-
-        CollapseBVH(node.leftFirst);
-        CollapseBVH(node.leftFirst + 1);
-    }
-
     int rightChildIdx = node.leftFirst + 1;
     BVHNode& rightChild = bvhNodes[rightChildIdx];
 
-    if (rightChild.isLeaf())
-    {
-        newNode.aabbMin[i] = rightChild.aabbMin;
-        newNode.aabbMax[i] = rightChild.aabbMax;
-        newNode.child[i] = rightChild.leftFirst;
-        newNode.count[i] = rightChild.primitivesCount;
-        i++;
-    }
-    else
-    {
-        newNode.aabbMin[i] = rightChild.aabbMin;
-        newNode.aabbMax[i] = rightChild.aabbMax;
-        newNode.child[i] = node.leftFirst;
-        newNode.count[i] = rightChild.primitivesCount;
-        i++;
-        newNode.aabbMin[i] = rightChild.aabbMin;
-        newNode.aabbMax[i] = rightChild.aabbMax;
-        newNode.child[i] = node.leftFirst + 1;
-        newNode.count[i] = rightChild.primitivesCount;
-        CollapseBVH(node.leftFirst);
-        CollapseBVH(node.leftFirst + 1);
-    }
+    newNode.aabbMin[0] = leftChild.aabbMin;
+    newNode.aabbMax[0] = leftChild.aabbMax;
+    newNode.child[0] = leftChild.isLeaf() ? leftChild.leftFirst : node.leftFirst;
+    newNode.count[0] = leftChild.primitivesCount;
+
+    newNode.aabbMin[1] = rightChild.aabbMin;
+    newNode.aabbMax[1] = rightChild.aabbMax;
+    newNode.child[1] = rightChild.isLeaf() ? rightChild.leftFirst : node.leftFirst + 1;
+    newNode.count[1] = rightChild.primitivesCount;
+
+    CollapseBVH(node.leftFirst);
+    CollapseBVH(node.leftFirst + 1);
 }
 
 void Bvh::UpdateNodeBounds(uint nodeIdx)
