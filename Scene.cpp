@@ -68,7 +68,7 @@ Scene::Scene()
 	primitives.push_back(sphere10);
 	Primitive sphere11 = { 11, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
 	primitives.push_back(sphere11);*/
-	LoadModelNew(primitives.size(), "assets\\lucy.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.05f, 180.f);
+	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.05f, 180.f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
 #ifdef WHITTED_STYLE

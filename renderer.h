@@ -13,7 +13,6 @@ namespace Tmpl8
 		float3 SampleHemisphere(const float3& N);
 		float3 GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
 		void Tick(float deltaTime);
-		void OnKeyPressed(float deltaTime);
 		void Shutdown() { /* implement if you want to do something on exit */ }
 		// input handling
 		void MouseUp(int button); /* implement if you want to detect mouse button presses */

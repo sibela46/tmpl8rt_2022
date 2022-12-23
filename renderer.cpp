@@ -162,66 +162,12 @@ void Renderer::Tick( float deltaTime )
 		}
 	}
 
-	OnKeyPressed(deltaTime);
-
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
 	if (alpha > 0.05f) alpha *= 0.5f;
 	float fps = 1000 / avg, rps = (SCRWIDTH * SCRHEIGHT) * fps;
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
-}
-
-void Renderer::OnKeyPressed(float deltaTime)
-{
-	bool shouldUpdate = false;
-
-	if (GetKeyState('W') & 0x8000)
-	{
-		camera.Translate(float3(0, 0, 1.f) * 0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('S') & 0x8000)
-	{
-		camera.Translate(float3(0, 0, -1.f) * 0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('A') & 0x8000)
-	{
-		camera.Translate(float3(-1.f, 0, 0.f) * 0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('D') & 0x8000)
-	{
-		camera.Translate(float3(1.f, 0, 0.f) * 0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('Z') & 0x8000)
-	{
-		camera.RotateY(0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('X') & 0x8000)
-	{
-		camera.RotateY(-0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('Q') & 0x8000)
-	{
-		camera.RotateX(0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-	if (GetKeyState('E') & 0x8000)
-	{
-		camera.RotateX(-0.05f * deltaTime);
-		shouldUpdate = true;
-	}
-
-	if (shouldUpdate)
-	{
-		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
-		accumulatorCounter = 0;
-	}
 }
 
 void Renderer::KeyUp(int key) {}
