@@ -26,7 +26,6 @@ public:
 		bottomLeft = float3( -aspect, -1, 0 );
 		forwardDir = float3(0, 0, 1.f);
 		speed = 3.f;
-		Translate(0.0, 0.0, -3.2f);
 	}
 	float getRadians(const float angle)
 	{
@@ -131,6 +130,14 @@ public:
 		res[2] = dot(p, zTransform);
 
 		return res;
+	}
+	void SetPosition(float3 pos)
+	{
+		float3 offset = pos - camPos;
+		topLeft += offset;
+		topRight += offset;
+		bottomLeft += offset;
+		camPos = pos;
 	}
 	void Translate(float x, float y, float z)
 	{

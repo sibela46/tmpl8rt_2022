@@ -47,15 +47,57 @@ void Bvh::CollapseBVH(uint nodeIdx)
     int rightChildIdx = node.leftFirst + 1;
     BVHNode& rightChild = bvhNodes[rightChildIdx];
 
-    newNode.aabbMin[0] = leftChild.aabbMin;
-    newNode.aabbMax[0] = leftChild.aabbMax;
-    newNode.child[0] = leftChild.isLeaf() ? leftChild.leftFirst : node.leftFirst;
-    newNode.count[0] = leftChild.primitivesCount;
+    int i = 0;
+    if (leftChild.isLeaf())
+    {
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = leftChild.leftFirst;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = leftChild.leftFirst+1;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
+    }
+    else
+    {
+        newNode.aabbMin[i] = leftChild.aabbMin;
+        newNode.aabbMax[i] = leftChild.aabbMax;
+        newNode.child[i] = node.leftFirst;
+        newNode.count[i] = leftChild.primitivesCount;
+        i++;
+    }
 
-    newNode.aabbMin[1] = rightChild.aabbMin;
-    newNode.aabbMax[1] = rightChild.aabbMax;
-    newNode.child[1] = rightChild.isLeaf() ? rightChild.leftFirst : node.leftFirst + 1;
-    newNode.count[1] = rightChild.primitivesCount;
+    if (rightChild.isLeaf())
+    {
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = rightChild.leftFirst;
+        newNode.count[i] = rightChild.primitivesCount;
+        i++;
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = rightChild.leftFirst + 1;
+        newNode.count[i] = rightChild.primitivesCount;
+        i++;
+    }
+    else
+    {
+        newNode.aabbMin[i] = rightChild.aabbMin;
+        newNode.aabbMax[i] = rightChild.aabbMax;
+        newNode.child[i] = node.leftFirst+1;
+        newNode.count[i] = rightChild.primitivesCount;
+        i++;
+    }
+
+    /*newNode.aabbxMin4 = _mm_set_ps(newNode.aabbMin[0].x, newNode.aabbMin[1].x, newNode.aabbMin[2].x, newNode.aabbMin[3].x);
+    newNode.aabbxMax4 = _mm_set_ps(newNode.aabbMax[0].x, newNode.aabbMax[1].x, newNode.aabbMax[2].x, newNode.aabbMax[3].x);
+    newNode.aabbyMin4 = _mm_set_ps(newNode.aabbMin[0].y, newNode.aabbMin[1].y, newNode.aabbMin[2].y, newNode.aabbMin[3].y);
+    newNode.aabbyMax4 = _mm_set_ps(newNode.aabbMax[0].y, newNode.aabbMax[1].y, newNode.aabbMax[2].y, newNode.aabbMax[3].y);
+    newNode.aabbzMin4 = _mm_set_ps(newNode.aabbMin[0].z, newNode.aabbMin[1].z, newNode.aabbMin[2].z, newNode.aabbMin[3].z);
+    newNode.aabbzMax4 = _mm_set_ps(newNode.aabbMax[0].z, newNode.aabbMax[1].z, newNode.aabbMax[2].z, newNode.aabbMax[3].z);*/
 
     CollapseBVH(node.leftFirst);
     CollapseBVH(node.leftFirst + 1);
@@ -91,8 +133,6 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
             case ObjectType::PLANE:
             {
                 float3 offset = float3((1 - abs(leafPri.n.x)) * HORIZON, (1 - abs(leafPri.n.y)) * HORIZON, (1 - abs(leafPri.n.z)) * HORIZON);
-                printf("id: %d, center: %f %f %f\n", leafPri.index, leafPri.centroid.x, leafPri.centroid.y, leafPri.centroid.z);
-                printf("id: %d, offset: %f %f %f\n", leafPri.index, offset.x, offset.y, offset.z);
                 node.aabbMin = fminf(node.aabbMin, leafPri.centroid - offset);
                 node.aabbMax = fminf(node.aabbMax, leafPri.centroid + offset);
             }
@@ -236,12 +276,14 @@ void Bvh::Subdivide(uint nodeIdx)
 void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
 {
     QBVHNode& node = qbvhNodes[nodeIdx];
+    
+//    if (!IntersectAABB_SSE(ray, node.aabbxMin4, node.aabbxMax4, node.aabbyMin4, node.aabbyMax4, node.aabbzMin4, node.aabbzMax4)) return;
+
     for (int c = 0; c < 4; c++)
     {
         if (node.child[c] == -1) continue;
         if (!IntersectAABB(ray, node.aabbMin[c], node.aabbMax[c])) continue;
-
-        if (node.count[c] > 0) // isLeaf
+        if (node.isLeaf(c)) // isLeaf
         {
             for (uint i = 0; i < node.count[c]; i++)
                 primitives[primitivesIndices[node.child[c] + i]].Intersect(ray);
@@ -298,16 +340,36 @@ bool Bvh::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
     return tmax >= tmin && tmin < ray.t && tmax > 0;
 }
 
-float Bvh::IntersectAABB_SSE(const __m128& O4, const __m128& rD4, const float& t, const __m128& bmin4, const __m128& bmax4)
+float Bvh::IntersectAABB_SSE(const Ray& ray, const __m128& bmin4x, const __m128& bmax4x, const __m128& bmin4y, const __m128& bmax4y, const __m128& bmin4z, const __m128& bmax4z)
 {
-    // "slab test" ray/AABB intersection, using SIMD instructions
     static __m128 mask4 = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_set_ps(1, 0, 0, 0));
-    __m128 t1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4, mask4), O4), rD4);
-    __m128 t2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4, mask4), O4), rD4);
-    __m128 vmax4 = _mm_max_ps(t1, t2), vmin4 = _mm_min_ps(t1, t2);
-    float tmax = min(vmax4.m128_f32[0], min(vmax4.m128_f32[1], vmax4.m128_f32[2]));
-    float tmin = max(vmin4.m128_f32[0], max(vmin4.m128_f32[1], vmin4.m128_f32[2]));
-    if (tmax >= tmin && tmin < t && tmax > 0) return tmin; else return 1e30f;
+    __m128 tx1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4x, mask4), ray.Ox4), ray.rDx4);
+    __m128 tx2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4x, mask4), ray.Ox4), ray.rDx4);
+    __m128 tmin4 = _mm_min_ps(tx1, tx2), tmax4 = _mm_max_ps(tx1, tx2);
+    __m128 ty1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4y, mask4), ray.Oy4), ray.rDy4);
+    __m128 ty2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4y, mask4), ray.Oy4), ray.rDy4);
+    tmin4 = _mm_max_ps(tmin4, _mm_min_ps(ty1, ty2)), tmax4 = _mm_min_ps(tmax4, _mm_max_ps(ty1, ty2));
+    __m128 tz1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4z, mask4), ray.Oz4), ray.rDz4);
+    __m128 tz2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4z, mask4), ray.Oz4), ray.rDz4);
+    tmin4 = _mm_max_ps(tmin4, _mm_min_ps(ty1, ty2)), tmax4 = _mm_min_ps(tmax4, _mm_max_ps(ty1, ty2));
+    
+    /*__m128 t4 = _mm_set_ps1(1e34f);
+    __m128 tmax_zero = _mm_cmpgt_ps(tmax4, _mm_set_ps1(0.f));
+    __m128 tmin_t = _mm_cmplt_ps(tmin4, _mm_set_ps1(ray.t));
+    __m128 tmax_tmin = _mm_cmpgt_ps(tmin4, tmax4);
+    __m128 mask = _mm_and_ps(tmax_zero, _mm_and_ps(tmin_t, tmax_tmin));
+
+    t4 = _mm_blendv_ps(t4, tmin4, mask);*/
+    alignas(16) float tmins[4];
+    alignas(16) float tmaxs[4];
+    _mm_store_ps(tmins, tmin4);
+    _mm_store_ps(tmaxs, tmax4);
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (tmaxs[i] >= tmins[i] && tmins[i] < ray.t && tmaxs[i] > 0) return tmins[i];
+    }
+    return 1e30f;
 }
 
 bool Bvh::IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax)

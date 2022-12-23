@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 50) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 30) return scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -121,7 +121,6 @@ float3 Renderer::GenerateRandomVec(const float3& N)
 	return randomVec;
 }
 
-
 float3 Renderer::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
 {
 	float3 distToLight = normalize(light->position - I);
@@ -167,6 +166,7 @@ void Renderer::Tick( float deltaTime )
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
 	if (alpha > 0.05f) alpha *= 0.5f;
 	float fps = 1000 / avg, rps = (SCRWIDTH * SCRHEIGHT) * fps;
+	printf("Camera position: %f %f %f\n", camera.camPos.x, camera.camPos.y, camera.camPos.z);
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
 }
 
@@ -174,6 +174,13 @@ void Renderer::KeyUp(int key) {}
 
 void Renderer::KeyDown(int key) 
 {
+	if (key == 67) // C key pressed
+	{
+		float3 pos = float3(1.730125, -0.081414, 3.563606);
+		camera.SetPosition(pos);
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+	}
 	if (key == 87) //w
 	{
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
@@ -214,13 +221,6 @@ void Renderer::KeyDown(int key)
 
 void Renderer::KeyStillDown(int key)
 {
-	if (key == 67) // C key pressed
-	{
-		camera.RotateX(10.f);
-		camera.Translate(0.f, 0.f, -10.f);
-		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
-		accumulatorCounter = 0;
-	}
 	if (key == 87) //w
 	{
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);

@@ -89,7 +89,8 @@ using namespace std;
 #include <GLFW/glfw3native.h>
 
 //#define WHITTED_STYLE // uncomment for whitted
-//#define SSE
+#define SSE
+#define QBVH
 
 // zlib
 #include "zlib.h"

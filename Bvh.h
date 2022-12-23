@@ -1,13 +1,6 @@
 #pragma once
 #define BINS 100
 
-//__declspec(align(32)) struct BVHNode
-//{
-//	float3 aabbMin, aabbMax;
-//	uint leftFirst, primitivesCount;
-//	bool isLeaf() { return primitivesCount > 0; }
-//};
-
 struct BVHNode
 {
 	union { struct { float3 aabbMin; uint leftFirst; }; __m128 aabbMin4; };
@@ -267,7 +260,7 @@ public:
 	void	IntersectQBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
-	float	IntersectAABB_SSE(const __m128& O4, const __m128& rD4, const float& t, const __m128& bmin4, const __m128& bmax4);
+	float	IntersectAABB_SSE(const Ray& ray, const __m128& bmin4x, const __m128& bmax4x, const __m128& bmin4y, const __m128& bmax4y, const __m128& bmin4z, const __m128& bmax4z);
 	bool	IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax);
 public:
 	static const uint rootNodeIdx = 0;

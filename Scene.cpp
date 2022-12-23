@@ -46,30 +46,8 @@ Scene::Scene()
 
 	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, 1.f, -5.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
 	//primitives.push_back(sphere);
-	Primitive sphere1 = { 1, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
-	//primitives.push_back(sphere1);
-	Primitive sphere2 = { 2, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
-	//primitives.push_back(sphere2);
-	Primitive sphere3 = { 3, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	//primitives.push_back(sphere3);
-	Primitive sphere4 = { 4, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	//primitives.push_back(sphere4);
-	Primitive sphere5 = { 5, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	//primitives.push_back(sphere5);
-	/*Primitive sphere6 = { 6, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere6);
-	Primitive sphere7 = { 7, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere7);
-	Primitive sphere8 = { 8, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere8);
-	Primitive sphere9 = { 9, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere9);
-	Primitive sphere10 = { 10, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere10);
-	Primitive sphere11 = { 11, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
-	primitives.push_back(sphere11);*/
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.05f, 180.f);
-	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
+
+	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 1.f, 0.f);
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(1.f, 5.f, -10.0f));
@@ -92,7 +70,11 @@ void Scene::FindNearest(Ray& ray)
 	{
 		planes[i].Intersect(ray);
 	}
+#ifdef QBVH
 	bvh->IntersectQBVH(ray, Bvh::rootNodeIdx);
+#else
+	bvh->IntersectBVH(ray, Bvh::rootNodeIdx);
+#endif // SSE
 }
 
 bool Scene::IsOccluded(const Ray& ray)
