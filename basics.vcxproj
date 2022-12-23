@@ -133,6 +133,7 @@
     <ClCompile Include="objects\Triangle.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="DataCollector.cpp" />
     <ClCompile Include="template\template.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -141,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="Bvh.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="DataCollector.h" />
     <ClInclude Include="objects\Cube.h" />
     <ClInclude Include="objects\Cylinder.h" />
     <ClInclude Include="objects\Light.h" />

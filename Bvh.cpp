@@ -1,6 +1,7 @@
 #include "precomp.h"
 
-Bvh::Bvh(vector<Primitive> pri) {
+Bvh::Bvh(vector<Primitive> pri, DataCollector* data2) {
+    data = data2;
     primitives = pri;
     
     N = primitives.size();
@@ -32,7 +33,8 @@ void Bvh::BuildBVH()
     root.leftFirst = 0, root.primitivesCount = N;
     UpdateNodeBounds(rootNodeIdx);
     // subdivide recursively
-    Subdivide(rootNodeIdx);
+    Subdivide(rootNodeIdx, 0);
+    data->UpdateNodeCount(nodesUsed);
 }
 
 void Bvh::CollapseBVH(uint nodeIdx)
@@ -122,12 +124,14 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v1);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v2);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v3);
+                data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
             case ObjectType::SPHERE:
             {
                 node.aabbMin = fminf(node.aabbMin, leafPri.v1 - leafPri.size);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v1 + leafPri.size);
+                data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
             case ObjectType::PLANE:
@@ -135,6 +139,7 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 float3 offset = float3((1 - abs(leafPri.n.x)) * HORIZON, (1 - abs(leafPri.n.y)) * HORIZON, (1 - abs(leafPri.n.z)) * HORIZON);
                 node.aabbMin = fminf(node.aabbMin, leafPri.centroid - offset);
                 node.aabbMax = fminf(node.aabbMax, leafPri.centroid + offset);
+                data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
         }
@@ -235,7 +240,7 @@ void Bvh::GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis)
     bestPos = node.aabbMin[bestAxis] + extent[bestAxis] * 0.5f;
 }
 
-void Bvh::Subdivide(uint nodeIdx)
+void Bvh::Subdivide(uint nodeIdx, int dept)
 {
     BVHNode& node = bvhNodes[nodeIdx];
     // determine split axis and position
@@ -244,6 +249,8 @@ void Bvh::Subdivide(uint nodeIdx)
     float splitCost = FindBestSplitPlane(node, splitPos, axis);
     float noSplitCost = CalculateNodeCost(node);
     if (splitCost >= noSplitCost) return;
+    if (dept > (data->maxTreeDepth)) data->maxTreeDepth = dept;
+
     //GetMiddleSplitPosition(node, splitPos, axis);
     int i = node.leftFirst;
     int j = i + node.primitivesCount - 1;
@@ -269,8 +276,8 @@ void Bvh::Subdivide(uint nodeIdx)
     UpdateNodeBounds(leftChildIdx);
     UpdateNodeBounds(rightChildIdx);
     // recurse
-    Subdivide(leftChildIdx);
-    Subdivide(rightChildIdx);
+    Subdivide(leftChildIdx, dept + 1);
+    Subdivide(rightChildIdx, dept + 1);
 }
 
 void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
@@ -285,8 +292,10 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
         if (!IntersectAABB(ray, node.aabbMin[c], node.aabbMax[c])) continue;
         if (node.isLeaf(c)) // isLeaf
         {
-            for (uint i = 0; i < node.count[c]; i++)
+            for (uint i = 0; i < node.count[c]; i++) {
                 primitives[primitivesIndices[node.child[c] + i]].Intersect(ray);
+                data->UpdateIntersectedPrimitives();
+            }
         }
         else
         {
@@ -302,8 +311,10 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
 
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++)
+        for (uint i = 0; i < node.primitivesCount; i++) {
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(ray);
+            data->UpdateIntersectedPrimitives();
+        }
     }
     else
     {
@@ -319,8 +330,10 @@ void Bvh::IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, con
     if (!IntersectAABB(O, D, distToLight, node.aabbMin, node.aabbMax)) return;
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++)
+        for (uint i = 0; i < node.primitivesCount; i++) {
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(O, D, distToLight, hitObject);
+            data->UpdateIntersectedPrimitives();
+        }
     }
     else
     {

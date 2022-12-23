@@ -2,6 +2,9 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "lib/tiny_obj_loader.h"
 
+#include <chrono>
+using namespace std::chrono;
+
 #define PLANE_X(o,i,m) {if((t=-(ray.O.x+o)*ray.rD.x)<ray.t)ray.t=t,ray.objIdx=i,ray.objMaterial=m;}
 #define PLANE_Y(o,i,m) {if((t=-(ray.O.y+o)*ray.rD.y)<ray.t)ray.t=t,ray.objIdx=i,ray.objMaterial=m;}
 #define PLANE_Z(o,i,m) {if((t=-(ray.O.z+o)*ray.rD.z)<ray.t)ray.t=t,ray.objIdx=i,ray.objMaterial=m;}
@@ -19,8 +22,9 @@ Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
 Material glass = { PURPLE,  MaterialType::GLASS, 0.0, 1.0 };
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
-Scene::Scene()
+Scene::Scene(DataCollector* data2)
 {
+	data = data2;
 	Primitive plane1 = { 0, ObjectType::PLANE, float3(0), float3(1, 0, 0), float3(0), float3(0), float3(1, 0, 0), 2.f, 0.f, 0.f, purpleDiffuse }; // left wall
 	Primitive plane2 = { 1, ObjectType::PLANE, float3(0), float3(-1, 0, 0), float3(0), float3(0), float3(-1, 0, 0), 2.f, 0.f, 0.f, blueDiffuse }; // right wall
 	Primitive plane3 = { 2, ObjectType::PLANE, float3(0), float3(0, -1, 0), float3(0), float3(0), float3(0, -1, 0), 2.f, 0.f, 0.f, whiteDiffuse }; // ceiling
@@ -57,9 +61,12 @@ Scene::Scene()
 	//primitives.push_back(light1);
 	//primitives.push_back(light2);
 #endif
-
-	bvh = new Bvh(primitives);
+	auto start = high_resolution_clock::now();
+	bvh = new Bvh(primitives, data);
 	bvh->BuildBVH();
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	data->UpdateBuildTime(duration.count());
 
 	bvh->CollapseBVH(Bvh::rootNodeIdx);
 }

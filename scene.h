@@ -3,7 +3,7 @@
 class Scene
 {
 public:
-	Scene();
+	Scene(DataCollector* data);
 	virtual ~Scene() = default;
 
 	void FindNearest(Ray& ray);
@@ -29,4 +29,5 @@ public:
 	Light* light;
 	TextureMap* skydomeTexture;
 	float3 objTranslate;
+	DataCollector* data;
 };

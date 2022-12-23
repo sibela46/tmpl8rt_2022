@@ -248,14 +248,14 @@ struct Bin { aabb bounds; int priCount = 0; };
 class Bvh
 {
 public:
-	Bvh(vector<Primitive> primitives);
+	Bvh(vector<Primitive> primitives, DataCollector* data);
 	void	BuildBVH();
 	void	CollapseBVH(uint nodeIdx);
 	void	UpdateNodeBounds(uint nodeIdx);
 	float	CalculateNodeCost(const BVHNode& node);
 	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
 	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
-	void	Subdivide(uint nodeIdx);
+	void	Subdivide(uint nodeIdx, int dept);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectQBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
@@ -270,4 +270,5 @@ public:
 	BVHNode* bvhNodes;
 	std::vector<QBVHNode> qbvhNodes;
 	std::vector<int> primitivesIndices;
+	DataCollector* data;
 };

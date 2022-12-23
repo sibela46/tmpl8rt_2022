@@ -9,7 +9,8 @@ void Renderer::Init()
 	accumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
 
-	scene = new Scene();
+	data = new DataCollector();
+	scene = new Scene(data);
 }
 
 // -----------------------------------------------------------
@@ -135,6 +136,7 @@ float3 Renderer::GetSpecularColour(Light* light, const float3& I, const float3& 
 // -----------------------------------------------------------
 void Renderer::Tick( float deltaTime )
 {
+	data->UpdateFrameNumber();
 	accumulatorCounter += 1;
 	// animation
 	static float animTime = 0;
@@ -168,6 +170,7 @@ void Renderer::Tick( float deltaTime )
 	float fps = 1000 / avg, rps = (SCRWIDTH * SCRHEIGHT) * fps;
 	printf("Camera position: %f %f %f\n", camera.camPos.x, camera.camPos.y, camera.camPos.z);
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
+	data->UpdateFPS(fps);
 }
 
 void Renderer::KeyUp(int key) {}
@@ -216,6 +219,10 @@ void Renderer::KeyDown(int key)
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
 		accumulatorCounter = 0;
 		camera.Translate(0, -movespeed, 0);
+	}
+	if (key == 75)//k
+	{
+		data->PrintData("Data.csv");
 	}
 }
 

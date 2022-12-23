@@ -28,6 +28,7 @@ namespace Tmpl8
 	int accumulatorCounter = 0;
 	//Scene scene;
 	Scene* scene;
+	DataCollector* data;
 	Camera camera;
 	bool pressR;
 	bool pressL;
