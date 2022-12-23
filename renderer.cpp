@@ -18,7 +18,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 20) return float3(1);// scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 50) return scene->GetSkydomeTexture(ray); // or a fancy sky color
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
 	/* visualize normal */ // return (N + 1) * 0.5f;
@@ -162,6 +162,8 @@ void Renderer::Tick( float deltaTime )
 		}
 	}
 
+	OnKeyPressed(deltaTime);
+
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
@@ -170,6 +172,58 @@ void Renderer::Tick( float deltaTime )
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
 }
 
+void Renderer::OnKeyPressed(float deltaTime)
+{
+	bool shouldUpdate = false;
+
+	if (GetKeyState('W') & 0x8000)
+	{
+		camera.Translate(float3(0, 0, 1.f) * 0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('S') & 0x8000)
+	{
+		camera.Translate(float3(0, 0, -1.f) * 0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('A') & 0x8000)
+	{
+		camera.Translate(float3(-1.f, 0, 0.f) * 0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('D') & 0x8000)
+	{
+		camera.Translate(float3(1.f, 0, 0.f) * 0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('Z') & 0x8000)
+	{
+		camera.RotateY(0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('X') & 0x8000)
+	{
+		camera.RotateY(-0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('Q') & 0x8000)
+	{
+		camera.RotateX(0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+	if (GetKeyState('E') & 0x8000)
+	{
+		camera.RotateX(-0.05f * deltaTime);
+		shouldUpdate = true;
+	}
+
+
+	if (shouldUpdate)
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+	}
+}
 void Renderer::KeyDown(int key)
 {
 	if (key == 67) // C key pressed
@@ -179,6 +233,7 @@ void Renderer::KeyDown(int key)
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
 		accumulatorCounter = 0;
 	}
+
 }
 
 void Renderer::MouseUp(int button)

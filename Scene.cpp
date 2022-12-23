@@ -16,7 +16,7 @@ Material blackShiny = { BLACK,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greyShiny = { GREY,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
+Material glass = { PURPLE,  MaterialType::GLASS, 0.0, 1.0 };
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene()
@@ -42,9 +42,9 @@ Scene::Scene()
 	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
-	skydomeTexture = new TextureMap("\\assets\\sky.jfif");
+	skydomeTexture = new TextureMap("\\assets\\christmas_photo_studio_05_4k.hdr");
 
-	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, 1.f, -5.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
 	//primitives.push_back(sphere);
 	Primitive sphere1 = { 1, ObjectType::SPHERE, float3(0), float3(-1.f, -0.5f, 1.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
 	//primitives.push_back(sphere1);
@@ -68,16 +68,16 @@ Scene::Scene()
 	primitives.push_back(sphere10);
 	Primitive sphere11 = { 11, ObjectType::SPHERE, float3(0), float3(1.f, -0.5f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse };
 	primitives.push_back(sphere11);*/
-	LoadModelNew(primitives.size(), "assets\\lucy.obj", whiteDiffuse, float3(0.0f, -1.f, 1.0f), 0.05f, 0.f);
+	LoadModelNew(primitives.size(), "assets\\lucy.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 0.05f, 180.f);
 	//LoadModelNew(primitives.size(), "assets\\ChristmasTree.obj", greenDiffuse, float3(10.0f, -15.f, 10.0f), 0.01f);
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(-5.f, 0.0f, 0.0f));
+	light = new Light(float3(1.f, 5.f, -10.0f));
 #else
-	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 1.8f, 1.5f), float3(-1.5f, 1.8f, -1.5f), float3(1.5f, 1.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	primitives.push_back(light1);
-	primitives.push_back(light2);
+	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 3.f, -1.5f), float3(1.5f, 3.f, -1.5f), float3(1.5f, 3.f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 3.f, 1.5f), float3(-1.5f, 3.f, -1.5f), float3(1.5f, 3.f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	//primitives.push_back(light1);
+	//primitives.push_back(light2);
 #endif
 
 	bvh = new Bvh(primitives);
@@ -108,37 +108,6 @@ bool Scene::IsOccluded(const Ray& ray)
 	return hitSomething;
 }
 
-float3 Scene::GetNormal(int idx, ObjectType type, const float3& I, const float3& D)
-{
-	float3 N;
-	if (type == ObjectType::PLANE)
-	{
-		N = planes[idx].GetNormal();
-	}
-	else if (type == ObjectType::TRIANGLE)
-	{
-		N = triangles[idx].GetNormal();
-	}
-	else if (type == ObjectType::SPHERE)
-	{
-		N = spheres[idx].GetNormal(I);
-	}
-	else if (type == ObjectType::CUBE)
-	{
-		N = cubes[idx].GetNormal(I);
-	}
-	else if (type == ObjectType::CYLINDER)
-	{
-		N = cylinders[idx].GetNormal(I);
-	}
-	else if (type == ObjectType::TORUS)
-	{
-		N = tori[idx].GetNormal(I);
-	}
-	if (dot(N, D) > 0) N = -N; // hit backside / inside
-	return N;
-}
-
 float3 Scene::GetNormal(const Ray& ray)
 {
 	if (ray.inside) return -ray.normal; 
@@ -153,7 +122,7 @@ float3 Scene::GetShade(const Ray& ray)
 	float dotProduct = max(0.f, dot(normalize(dirToLight), ray.normal));
 	float attenuation = 1 / length(dirToLight);
 	float invPi = 1 / PI;
-	return light->GetEmission() * light->GetColour() * dotProduct * attenuation * invPi;
+	return light->GetEmission() * light->GetColour() * dotProduct * invPi;
 }
 
 float3 Scene::GetBeersLaw(Ray& ray)
@@ -168,97 +137,6 @@ float3 Scene::GetBeersLaw(Ray& ray)
 		return float3(pow(E, absorbance.x), pow(E, absorbance.y), pow(E, absorbance.z));
 	}
 	return 1;
-}
-
-void Scene::LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale)
-{
-	vector<Triangle> Model;
-
-	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z);
-
-	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
-	std::vector<float3> temp_vertices;
-	std::vector<float2> temp_uvs;
-	std::vector<float3> temp_normals;
-
-	char cCurrentPath[FILENAME_MAX];
-	if (!_getcwd(cCurrentPath, sizeof(cCurrentPath)))
-	{
-		printf("Cannot get current directory!\n");
-		return;
-	}
-
-	FILE* file = fopen((string(cCurrentPath) + string("\\assets\\" + string(fileName))).c_str(), "r");
-	if (file == NULL) {
-		printf("Impossible to open the file!\n");
-		return;
-	}
-	while (true)
-	{
-		char lineHeader[128];
-		int res = fscanf(file, "%s", lineHeader);
-		if (res == EOF)
-			break;
-		if (strcmp(lineHeader, "v") == 0)
-		{
-			float3 vertex;
-			fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-			temp_vertices.push_back(vertex);
-		}
-		else if (strcmp(lineHeader, "vn") == 0)
-		{
-			float3 normal;
-			fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-			temp_normals.push_back(normal);
-		}
-		else if (strcmp(lineHeader, "f") == 0)
-		{
-			std::string vertex1, vertex2, vertex3;
-			unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-			char stupidBuffer[1024];
-			fgets(stupidBuffer, 1024, file);
-			int matches = sscanf(stupidBuffer, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2]);
-			if (matches != 9) {
-				matches = sscanf(stupidBuffer, "%d//%d %d//%d %d//%d\n", &vertexIndex[0], &normalIndex[0], &vertexIndex[1], &normalIndex[1], &vertexIndex[2], &normalIndex[2]);
-				if (matches != 6) {
-					matches = sscanf(stupidBuffer, "%d %d %d\n", &vertexIndex[0], &vertexIndex[1], &vertexIndex[2]);
-					if (matches != 3) {
-						printf("File can't be read \n");
-						fclose(file);
-						return ;
-					}
-				}
-			}
-			vertexIndices.push_back(vertexIndex[0]);
-			vertexIndices.push_back(vertexIndex[1]);
-			vertexIndices.push_back(vertexIndex[2]);
-			normalIndices.push_back(normalIndex[0]);
-			normalIndices.push_back(normalIndex[1]);
-			normalIndices.push_back(normalIndex[2]);
-		}
-	}
-
-	std::vector<float4> out_vertices;
-	for (unsigned int i = 0; i < vertexIndices.size(); i++)
-	{
-		unsigned int vertexIndex = vertexIndices[i];
-		float4 vertex = float4(temp_vertices[vertexIndex - 1].x, temp_vertices[vertexIndex - 1].y, temp_vertices[vertexIndex - 1].z, 1.f);
-		out_vertices.push_back(vertex * transform * scale);
-	}
-
-	std::vector<float3> out_normals;
-	for (unsigned int i = 0; i < normalIndices.size(); i++)
-	{
-		unsigned int normalIndex = normalIndices[i];
-		float3 vertex = temp_normals[normalIndex - 1];
-		out_normals.push_back(vertex);
-	}
-
-	for (unsigned int i = 0; i < out_vertices.size() - 2; i += 3)
-	{
-		Model.emplace_back(Triangle(idx, out_vertices[i], out_vertices[i + 1], out_vertices[i + 2], out_normals[i], material));
-		idx += 1;
-	}
 }
 
 void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale, float angle)
@@ -355,4 +233,9 @@ float3 Scene::GetSkydomeTexture(const Ray& ray)
 	float u = phi / (2 * PI);
 	float v = theta / PI;
 	return skydomeTexture->GetColourAt(u, v);
+}
+
+void Scene::SetObjTranslate(float3 pos)
+{
+	light->position += pos;
 }

@@ -24,6 +24,8 @@ public:
 		topLeft = float3( -aspect, 1, 0 );
 		topRight = float3( aspect, 1, 0 );
 		bottomLeft = float3( -aspect, -1, 0 );
+		forwardDir = float3(0, 0, 1.f);
+		speed = 3.f;
 		Translate(0.0, 0.0, -3.2f);
 	}
 	float getRadians(const float angle)
@@ -72,6 +74,21 @@ public:
 		vect = bottomLeft - camPos;
 		bottomLeft = float3(vect[0], dot(vect, yTransform),  dot(vect, zTransform)) + camPos;
 	}
+	void Translate(float3 offset)
+	{
+		float3 X = normalize(topRight - topLeft);
+		float3 Y = normalize(topLeft - bottomLeft);
+		float3 Z = cross(X, Y);
+
+		float speed = 0.3;
+		float3 P = X * offset.x + Y * offset.y + Z * offset.z;
+		P = P * speed;
+
+		topLeft += P;
+		topRight += P;
+		bottomLeft += P;
+		camPos += P;
+	}
 	void Translate(float x, float y, float z)
 	{
 		float3 X = normalize(topRight - topLeft);
@@ -93,6 +110,8 @@ public:
 	float3 camPos;
 	float3 topLeft, topRight, bottomLeft;
 	float3 screenCentre;
+	float3 forwardDir;
+	float speed;
 	float focalLen;
 };
 

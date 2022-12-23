@@ -88,7 +88,8 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-#define WHITTED_STYLE // uncomment for whitted
+//#define WHITTED_STYLE // uncomment for whitted
+//#define SSE
 
 // zlib
 #include "zlib.h"
@@ -1724,7 +1725,6 @@ struct Material
 #include "objects/Cube.h"
 #include "objects/Cylinder.h"
 #include "Bvh.h"
-#include "BvhQB.h"
 #include "Scene.h"
 #include "camera.h"
 #include "renderer.h"

@@ -1,10 +1,17 @@
 #pragma once
 #define BINS 100
 
-__declspec(align(32)) struct BVHNode
+//__declspec(align(32)) struct BVHNode
+//{
+//	float3 aabbMin, aabbMax;
+//	uint leftFirst, primitivesCount;
+//	bool isLeaf() { return primitivesCount > 0; }
+//};
+
+struct BVHNode
 {
-	float3 aabbMin, aabbMax;
-	uint leftFirst, primitivesCount;
+	union { struct { float3 aabbMin; uint leftFirst; }; __m128 aabbMin4; };
+	union { struct { float3 aabbMax; uint primitivesCount; }; __m128 aabbMax4; };
 	bool isLeaf() { return primitivesCount > 0; }
 };
 
@@ -12,6 +19,7 @@ __declspec(align(128)) struct QBVHNode {
 	float3 aabbMin[4];
 	float3 aabbMax[4];
 	int child[4], count[4];
+	bool isLeaf(int i) { return count[i] > 0; }
 };
 
 struct Primitive { 
@@ -43,7 +51,11 @@ struct Primitive {
 		{
 		case ObjectType::TRIANGLE:
 			{
+#ifdef SSE
+				IntersectTriangleSSE(ray);
+#else
 				IntersectTriangle(ray);
+#endif
 			}
 			break;
 		case ObjectType::SPHERE:
@@ -106,6 +118,44 @@ struct Primitive {
 			return;
 		}
 		return;
+	}
+	void IntersectTriangleSSE(Ray& ray)
+	{
+		centroid = (v1 + v2 + v3) * 0.3333f;
+		__m128 EPS4 = _mm_set_ps1(EPSILON);
+		__m128 MINUSEPS4 = _mm_set_ps1(-EPSILON);
+		__m128 ONE4 = _mm_set_ps1(1.0f);
+		__m128 e1x4 = _mm_set_ps1(v2.x - v1.x);
+		__m128 e1y4 = _mm_set_ps1(v2.y - v1.y);
+		__m128 e1z4 = _mm_set_ps1(v2.z - v1.z);
+		__m128 e2x4 = _mm_set_ps1(v3.x - v1.x);
+		__m128 e2y4 = _mm_set_ps1(v3.y - v1.y);
+		__m128 e2z4 = _mm_set_ps1(v3.z - v1.z);
+		__m128 hx4 = _mm_sub_ps(_mm_mul_ps(ray.Dy4, e2z4), _mm_mul_ps(ray.Dz4, e2y4));
+		__m128 hy4 = _mm_sub_ps(_mm_mul_ps(ray.Dz4, e2x4), _mm_mul_ps(ray.Dx4, e2z4));
+		__m128 hz4 = _mm_sub_ps(_mm_mul_ps(ray.Dx4, e2y4), _mm_mul_ps(ray.Dy4, e2x4));
+		__m128 det4 = _mm_add_ps(_mm_add_ps(_mm_mul_ps(e1x4, hx4), _mm_mul_ps(e1y4, hy4)), _mm_mul_ps(e1z4, hz4));
+		__m128 mask1 = _mm_or_ps(_mm_cmple_ps(det4, MINUSEPS4), _mm_cmpge_ps(det4, EPS4));
+		__m128 inv_det4 = _mm_rcp_ps(det4);
+		__m128 sx4 = _mm_sub_ps(ray.Ox4, _mm_set_ps1(v1.x));
+		__m128 sy4 = _mm_sub_ps(ray.Oy4, _mm_set_ps1(v1.y));
+		__m128 sz4 = _mm_sub_ps(ray.Oz4, _mm_set_ps1(v1.z));
+		__m128 u4 = _mm_mul_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(sx4, hx4), _mm_mul_ps(sy4, hy4)), _mm_mul_ps(sz4, hz4)), inv_det4);
+		__m128 mask2 = _mm_and_ps(_mm_cmpge_ps(u4, _mm_setzero_ps()), _mm_cmple_ps(u4, ONE4));
+		__m128 qx4 = _mm_sub_ps(_mm_mul_ps(sy4, e1z4), _mm_mul_ps(sz4, e1y4));
+		__m128 qy4 = _mm_sub_ps(_mm_mul_ps(sz4, e1x4), _mm_mul_ps(sx4, e1z4));
+		__m128 qz4 = _mm_sub_ps(_mm_mul_ps(sx4, e1y4), _mm_mul_ps(sy4, e1x4));
+		__m128 v4 = _mm_mul_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(ray.Dx4, qx4), _mm_mul_ps(ray.Dy4, qy4)), _mm_mul_ps(ray.Dz4, qz4)), inv_det4);
+		__m128 mask3 = _mm_and_ps(_mm_cmpge_ps(v4, _mm_setzero_ps()), _mm_cmple_ps(_mm_add_ps(u4, v4), ONE4));
+		__m128 newt4 = _mm_mul_ps(_mm_add_ps(_mm_add_ps(_mm_mul_ps(e2x4, qx4), _mm_mul_ps(e2y4, qy4)), _mm_mul_ps(e2z4, qz4)), inv_det4);
+		__m128 mask4 = _mm_cmpgt_ps(newt4, _mm_setzero_ps());
+		__m128 mask5 = _mm_cmplt_ps(newt4, ray.t4);
+		__m128 combined = _mm_and_ps(_mm_and_ps(_mm_and_ps(_mm_and_ps(mask1, mask2), mask3), mask4), mask5);
+		ray.t4 = _mm_blendv_ps(ray.t4, newt4, combined);
+		ray.objIdx = index;
+		ray.objMaterial = material;
+		ray.objType = ObjectType::TRIANGLE;
+		ray.normal = n;
 	}
 	void IntersectTriangle(const float3& O, const float3& D, const float distToLight, bool& hitObject)
 	{
@@ -213,19 +263,18 @@ public:
 	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
 	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
 	void	Subdivide(uint nodeIdx);
-	void	ResetNodesUsed();
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectQBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
 	bool	IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
-	float	IntersectAABB_SSE(const Ray& ray, const __m128& bmin4, const __m128& bmax4);
+	float	IntersectAABB_SSE(const __m128& O4, const __m128& rD4, const float& t, const __m128& bmin4, const __m128& bmax4);
 	bool	IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax);
 public:
 	static const uint rootNodeIdx = 0;
 	uint nodesUsed = 1;
 	std::vector<Primitive> primitives;
 	int N;
-	std::vector<BVHNode> bvhNodes;
+	BVHNode* bvhNodes;
 	std::vector<QBVHNode> qbvhNodes;
 	std::vector<int> primitivesIndices;
 };

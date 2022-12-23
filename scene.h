@@ -9,13 +9,12 @@ public:
 	void FindNearest(Ray& ray);
 	bool IsOccluded(const Ray& ray);
 	float3 GetBeersLaw(Ray& ray);
-	float3 GetNormal(int idx, ObjectType type, const float3& I, const float3& D);
 	float3 GetNormal(const Ray& ray);
 	float3 GetShade(const Ray& ray);
 	float3 GetAlbedo(Ray& ray, const float3& N);
 	float3 GetSkydomeTexture(const Ray& ray);
+	void SetObjTranslate(float3 pos);
 
-	void LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale);
 	void LoadModelNew(int idx, const char* fileName, Material material, const float3& offset, float scale, float angle);
 
 public:
@@ -29,4 +28,5 @@ public:
 	std::vector<Primitive> primitives;
 	Light* light;
 	TextureMap* skydomeTexture;
+	float3 objTranslate;
 };

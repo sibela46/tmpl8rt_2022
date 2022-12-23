@@ -5,12 +5,7 @@ Bvh::Bvh(vector<Primitive> pri) {
     
     N = primitives.size();
     
-    for (int i = 0; i < 2 * N; i++) {
-        BVHNode newNode = {
-            float3(1e30f), float3(-1e30f), 0, 0
-        };
-        bvhNodes.push_back(newNode);
-    }
+    bvhNodes = (BVHNode*)_aligned_malloc(sizeof(BVHNode) * N * 2, 64);
 
     for (int i = 0; i < 2 * N; i++) {
         QBVHNode newNode = {
@@ -249,13 +244,10 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
         if (node.count[c] > 0) // isLeaf
         {
             for (uint i = 0; i < node.count[c]; i++)
-            {
                 primitives[primitivesIndices[node.child[c] + i]].Intersect(ray);
-            }
         }
         else
         {
-
             IntersectQBVH(ray, node.child[c]);
         }
     }
@@ -265,6 +257,7 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
 {
     BVHNode& node = bvhNodes[nodeIdx];
     if (!IntersectAABB(ray, node.aabbMin, node.aabbMax)) return;
+
     if (node.isLeaf())
     {
         for (uint i = 0; i < node.primitivesCount; i++)
@@ -305,16 +298,16 @@ bool Bvh::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
     return tmax >= tmin && tmin < ray.t && tmax > 0;
 }
 
-float Bvh::IntersectAABB_SSE(const Ray& ray, const __m128& bmin4, const __m128& bmax4)
+float Bvh::IntersectAABB_SSE(const __m128& O4, const __m128& rD4, const float& t, const __m128& bmin4, const __m128& bmax4)
 {
     // "slab test" ray/AABB intersection, using SIMD instructions
     static __m128 mask4 = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_set_ps(1, 0, 0, 0));
-    __m128 t1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4, mask4), ray.O4), ray.rD4);
-    __m128 t2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4, mask4), ray.O4), ray.rD4);
+    __m128 t1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4, mask4), O4), rD4);
+    __m128 t2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4, mask4), O4), rD4);
     __m128 vmax4 = _mm_max_ps(t1, t2), vmin4 = _mm_min_ps(t1, t2);
     float tmax = min(vmax4.m128_f32[0], min(vmax4.m128_f32[1], vmax4.m128_f32[2]));
     float tmin = max(vmin4.m128_f32[0], max(vmin4.m128_f32[1], vmin4.m128_f32[2]));
-    if (tmax >= tmin && tmin < ray.t && tmax > 0) return tmin; else return 1e30f;
+    if (tmax >= tmin && tmin < t && tmax > 0) return tmin; else return 1e30f;
 }
 
 bool Bvh::IntersectAABB(const float3& O, const float3& D, const float distToLight, const float3 bmin, const float3 bmax)

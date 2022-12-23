@@ -31,7 +31,6 @@
       <Filter>objects</Filter>
     </ClCompile>
     <ClCompile Include="Bvh.cpp" />
-    <ClCompile Include="BvhQB.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
@@ -40,9 +39,6 @@
       <Filter>template</Filter>
     </ClInclude>
     <ClInclude Include="template\precomp.h">
-      <Filter>template</Filter>
-    </ClInclude>
-    <ClInclude Include="template\ray.h">
       <Filter>template</Filter>
     </ClInclude>
     <ClInclude Include="objects\Triangle.h">
@@ -71,7 +67,9 @@
       <Filter>objects</Filter>
     </ClInclude>
     <ClInclude Include="Bvh.h" />
-    <ClInclude Include="BvhQB.h" />
+    <ClInclude Include="template\ray.h">
+      <Filter>template</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
