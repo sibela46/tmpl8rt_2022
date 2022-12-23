@@ -19,7 +19,8 @@ namespace Tmpl8
 		void MouseDown(int button); /* implement if you want to detect mouse button presses */
 		void MouseMove(int x, int y);
 		void MouseWheel(float z); /* implement if you want to handle the mouse wheel */
-		void KeyUp(int key) { /* implement if you want to handle keys */ }
+		void KeyUp(int key); /* implement if you want to handle keys */
+		void KeyStillDown(int key); /* implement if you want to handle keys */
 		void KeyDown(int key); /* implement if you want to handle keys */
 	// data members
 	int2 mousePos;
@@ -30,9 +31,11 @@ namespace Tmpl8
 	Camera camera;
 	bool pressR;
 	bool pressL;
-	float rotspeed = 0.2;
+	float rotspeed = 0.1;
+	float movespeed = 0.1;
 	int prevX;
 	int prevY;
+	bool forward;
 };
 
 } // namespace Tmpl8
