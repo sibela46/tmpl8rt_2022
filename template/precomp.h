@@ -1698,6 +1698,7 @@ public:
 	virtual void MouseMove( int x, int y ) = 0;
 	virtual void MouseWheel( float y ) = 0;
 	virtual void KeyUp( int key ) = 0;
+	virtual void KeyStillDown(int key) = 0;
 	virtual void KeyDown( int key ) = 0;
 	Surface* screen = 0;
 };

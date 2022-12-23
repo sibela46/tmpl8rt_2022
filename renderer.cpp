@@ -217,14 +217,56 @@ void Renderer::OnKeyPressed(float deltaTime)
 		shouldUpdate = true;
 	}
 
-
 	if (shouldUpdate)
 	{
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
 		accumulatorCounter = 0;
 	}
 }
-void Renderer::KeyDown(int key)
+
+void Renderer::KeyUp(int key) {}
+
+void Renderer::KeyDown(int key) 
+{
+	if (key == 87) //w
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, 0, movespeed);
+	}
+	if (key == 83) //s
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, 0, -movespeed);
+	}
+	if (key == 65) //a
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(-movespeed, 0, 0);
+	}
+	if (key == 68) //d
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(movespeed, 0, 0);
+	}
+	if (key == 81) //q
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, movespeed, 0);
+	}
+	if (key == 69) //e
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, -movespeed, 0);
+	}
+}
+
+void Renderer::KeyStillDown(int key)
 {
 	if (key == 67) // C key pressed
 	{
@@ -233,7 +275,42 @@ void Renderer::KeyDown(int key)
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
 		accumulatorCounter = 0;
 	}
-
+	if (key == 87) //w
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, 0, movespeed);
+	}
+	if (key == 83) //s
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, 0, -movespeed);
+	}
+	if (key == 65) //a
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(-movespeed, 0, 0);
+	}
+	if (key == 68) //d
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(movespeed, 0, 0);
+	}
+	if (key == 81) //q
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, movespeed, 0);
+	}
+	if (key == 69) //e
+	{
+		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
+		accumulatorCounter = 0;
+		camera.Translate(0, -movespeed, 0);
+	}
 }
 
 void Renderer::MouseUp(int button)
@@ -266,7 +343,7 @@ void Renderer::MouseMove(int x, int y)
 	{
 		memset(accumulator, 0, SCRWIDTH * SCRHEIGHT * 16);
 		accumulatorCounter = 0;
-		camera.Translate(-(x - prevX) * rotspeed * 0.05, (y - prevY) * rotspeed * 0.05, 0);
+		camera.Translate(-(x - prevX) * rotspeed * 0.1, (y - prevY) * rotspeed * 0.1, 0);
 		/*Ray primaryRay = camera.GetPrimaryRay(x, y);
 		float4 colour = float4(Trace(primaryRay, 0), 0);*/
 	}

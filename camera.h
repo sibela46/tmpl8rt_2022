@@ -46,6 +46,10 @@ public:
 	}
 	void RotateY(const float angle)
 	{
+		float3 Y = normalize(topLeft - bottomLeft);
+		
+		yAngle += getRadians(angle);
+
 		double c = cos(getRadians(angle));
 		double s = sin(getRadians(angle));
 		float3 xTransform = float3(c, 0, s);
@@ -58,21 +62,29 @@ public:
 		topRight = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
 		vect = bottomLeft - camPos;
 		bottomLeft = float3(dot(vect, xTransform), vect[1], dot(vect, zTransform)) + camPos;
+	
 	}
 	void RotateX(const float angle)
 	{
 		double c = cos(getRadians(angle));
 		double s = sin(getRadians(angle));
+		float3 xTransform = float3(1, 0, 0);
 		float3 yTransform = float3(0, c, -s);
 		float3 zTransform = float3(0, s, c);
 		float3 vect;
 
 		vect = topLeft - camPos;
-		topLeft = float3(vect[0], dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = RotateY(vect, yAngle);
+		float3 res = float3(dot(vect, xTransform), dot(vect, yTransform), dot(vect, zTransform));
+		topLeft = RotateY(res, -yAngle) + camPos;
 		vect = topRight - camPos;
-		topRight = float3(vect[0], dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = RotateY(vect, yAngle);
+		res = float3(dot(vect, xTransform), dot(vect, yTransform), dot(vect, zTransform));
+		topRight = RotateY(res, -yAngle) + camPos;
 		vect = bottomLeft - camPos;
-		bottomLeft = float3(vect[0], dot(vect, yTransform),  dot(vect, zTransform)) + camPos;
+		vect = RotateY(vect, yAngle);
+		res = float3(dot(vect, xTransform), dot(vect, yTransform),  dot(vect, zTransform));
+		bottomLeft = RotateY(res, -yAngle) + camPos;
 	}
 	void Translate(float3 offset)
 	{
@@ -88,6 +100,37 @@ public:
 		topRight += P;
 		bottomLeft += P;
 		camPos += P;
+	}
+	void RotateZ(const float angle)
+	{
+		double c = cos(getRadians(angle));
+		double s = sin(getRadians(angle));
+		float3 xTransform = float3(c, -s, 0);
+		float3 yTransform = float3(s, c, 0);
+		float3 zTransform = float3(0, 0, 1);
+		float3 vect;
+
+		vect = topLeft - camPos;
+		topLeft = float3(dot(vect, xTransform), dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = topRight - camPos;
+		topRight = float3(dot(vect, xTransform), dot(vect, yTransform), dot(vect, zTransform)) + camPos;
+		vect = bottomLeft - camPos;
+		bottomLeft = float3(dot(vect, xTransform), dot(vect, yTransform),  dot(vect, zTransform)) + camPos;
+	}
+
+	float3 RotateY(float3 p, float theta) {
+		double c = cos(theta);
+		double s = sin(theta);
+		float3 res = float3(0.f);
+
+		float3 xTransform = float3(c, 0, -s);
+		float3 zTransform = float3(s, 0, c);
+
+		res[0] = dot(p, xTransform);
+		res[1] = p[1];
+		res[2] = dot(p, zTransform);
+
+		return res;
 	}
 	void Translate(float x, float y, float z)
 	{
@@ -105,7 +148,6 @@ public:
 		camPos += P;
 	}
 	
-
 	float aspect = (float)SCRWIDTH / (float)SCRHEIGHT;
 	float3 camPos;
 	float3 topLeft, topRight, bottomLeft;
@@ -113,6 +155,7 @@ public:
 	float3 forwardDir;
 	float speed;
 	float focalLen;
+	float yAngle;
 };
 
 }
