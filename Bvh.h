@@ -255,7 +255,7 @@ struct Bin { aabb bounds; int priCount = 0; };
 class Bvh
 {
 public:
-	Bvh(vector<Primitive> primitives);
+	Bvh(vector<Primitive> primitives, DataCollector* data);
 	void	BuildBVH();
 	void	CollapseBVH(uint nodeIdx);
 	void	UpdateNodeBounds(uint nodeIdx);
@@ -277,4 +277,5 @@ public:
 	BVHNode* bvhNodes;
 	std::vector<QBVHNode> qbvhNodes;
 	std::vector<int> primitivesIndices;
+	DataCollector* data;
 };

@@ -1725,6 +1725,7 @@ struct Material
 #include "objects/Light.h"
 #include "objects/Cube.h"
 #include "objects/Cylinder.h"
+#include "DataCollector.h"
 #include "Bvh.h"
 #include "Scene.h"
 #include "camera.h"

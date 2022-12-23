@@ -1,6 +1,7 @@
 #include "precomp.h"
 
-Bvh::Bvh(vector<Primitive> pri) {
+Bvh::Bvh(vector<Primitive> pri, DataCollector* data) {
+    data = data;
     primitives = pri;
     
     N = primitives.size();
@@ -80,12 +81,14 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v1);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v2);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v3);
+                //data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
             case ObjectType::SPHERE:
             {
                 node.aabbMin = fminf(node.aabbMin, leafPri.v1 - leafPri.size);
                 node.aabbMax = fmaxf(node.aabbMax, leafPri.v1 + leafPri.size);
+                //data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
             case ObjectType::PLANE:
@@ -95,6 +98,7 @@ void Bvh::UpdateNodeBounds(uint nodeIdx)
                 printf("id: %d, offset: %f %f %f\n", leafPri.index, offset.x, offset.y, offset.z);
                 node.aabbMin = fminf(node.aabbMin, leafPri.centroid - offset);
                 node.aabbMax = fminf(node.aabbMax, leafPri.centroid + offset);
+                //data->UpdateSummedArea(node.aabbMin, node.aabbMax);
             }
             break;
         }
@@ -243,8 +247,10 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
 
         if (node.count[c] > 0) // isLeaf
         {
-            for (uint i = 0; i < node.count[c]; i++)
+            for (uint i = 0; i < node.count[c]; i++) {
                 primitives[primitivesIndices[node.child[c] + i]].Intersect(ray);
+                //data->UpdateIntersectedPrimitives();
+            }
         }
         else
         {
@@ -260,8 +266,10 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
 
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++)
+        for (uint i = 0; i < node.primitivesCount; i++) {
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(ray);
+            //data->UpdateIntersectedPrimitives();
+        }
     }
     else
     {
@@ -277,8 +285,10 @@ void Bvh::IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, con
     if (!IntersectAABB(O, D, distToLight, node.aabbMin, node.aabbMax)) return;
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++)
+        for (uint i = 0; i < node.primitivesCount; i++) {
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(O, D, distToLight, hitObject);
+            //data->UpdateIntersectedPrimitives();
+        }
     }
     else
     {
