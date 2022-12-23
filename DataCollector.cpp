@@ -23,7 +23,7 @@ void DataCollector::UpdateBuildTime(float bt) {
     bvhBuildTime = bt;
 }
 void DataCollector::UpdateNodeCount(int nc) {
-    nodeCount += nc;
+    nodeCount = nc;
 }
 
 void DataCollector::UpdateFPS(float fps) {
@@ -46,7 +46,7 @@ void DataCollector::UpdateFrameNumber() {
 }
 
 void DataCollector::UpdateIntersectedPrimitives() {
-    intersectedPrimitiveCountPerIteration += 1;
+    intersectedPrimitiveCountPerIteration +=1;
 }
 
 float DataCollector::GetIntersectedPrimitives() {
@@ -75,8 +75,8 @@ void DataCollector::PrintData(std::string filename) {
     myFile << bvhBuildTime << "\n";
     myFile << GetAverageFPS() << "\n";
     myFile << nodeCount << "\n";
-    myFile << summedNodeArea << "\n";
-    myFile << GetAverageTraversalSteps() << "\n";
+    //myFile << summedNodeArea << "\n";
+    //myFile << GetAverageTraversalSteps() << "\n";
     myFile << GetIntersectedPrimitives() << "\n";
     myFile << maxTreeDepth << "\n";
 

@@ -20,6 +20,7 @@ public:
     void PrintData(std::string filename);
 
 public:
-    int frameNumber, nodeCount, summedNodeArea, traversalStepsPerIteration, intersectedPrimitiveCountPerIteration, maxTreeDepth, currDepth, averagePrimitivePerScreen, averageFPS, averageTraversalStepsPerScreen;
+    int frameNumber, nodeCount, summedNodeArea, traversalStepsPerIteration, maxTreeDepth, currDepth, averagePrimitivePerScreen, averageFPS, averageTraversalStepsPerScreen;
     float bvhBuildTime;
+    int intersectedPrimitiveCountPerIteration = 0;
 };

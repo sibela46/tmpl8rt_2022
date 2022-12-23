@@ -262,7 +262,7 @@ public:
 	float	CalculateNodeCost(const BVHNode& node);
 	void	GetMiddleSplitPosition(BVHNode& node, float& bestPos, int& bestAxis);
 	float	FindBestSplitPlane(BVHNode& node, float& splitPos, int& axis);
-	void	Subdivide(uint nodeIdx);
+	void	Subdivide(uint nodeIdx, int dept);
 	void	IntersectBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectQBVH(Ray& ray, const uint nodeIdx);
 	void	IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, const float distToLight, bool& hitPrimitive);
