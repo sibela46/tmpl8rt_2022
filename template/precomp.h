@@ -88,9 +88,10 @@ using namespace std;
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
-//#define WHITTED_STYLE // uncomment for whitted
-#define SSE
-#define QBVH
+//#define WHITTED_STYLE
+//#define SSE
+//#define QBVH
+//#define TEXTURES
 
 // zlib
 #include "zlib.h"
@@ -1718,15 +1719,10 @@ struct Material
 };
 
 #include "ray.h"
-#include "objects/Object.h"
-#include "objects/Triangle.h"
-#include "objects/Sphere.h"
-#include "objects/Torus.h"
-#include "objects/Plane.h"
-#include "objects/Light.h"
-#include "objects/Cube.h"
-#include "objects/Cylinder.h"
+#include "Light.h"
+#include "Cube.h"
 #include "DataCollector.h"
+#include "primitive.h"
 #include "Bvh.h"
 #include "Scene.h"
 #include "camera.h"

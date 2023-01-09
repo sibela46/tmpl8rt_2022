@@ -32,12 +32,12 @@ Scene::Scene(DataCollector* data2)
 	Primitive plane5 = { 4, ObjectType::PLANE, float3(0), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
 	Primitive plane6 = { 5, ObjectType::PLANE, float3(0), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
 	
-	/*primitives.push_back(plane1);
-	primitives.push_back(plane2);
-	primitives.push_back(plane3);
-	primitives.push_back(plane4);
-	primitives.push_back(plane5);
-	primitives.push_back(plane6);*/
+	/*planes.push_back(plane1);
+	planes.push_back(plane2);
+	planes.push_back(plane3);
+	planes.push_back(plane4);
+	planes.push_back(plane5);
+	planes.push_back(plane6);*/
 
 	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
 	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
@@ -46,20 +46,20 @@ Scene::Scene(DataCollector* data2)
 	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
 	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
 
-	skydomeTexture = new TextureMap("\\assets\\christmas_photo_studio_05_4k.hdr");
+	skydomeTexture = new TextureMap("\\assets\\table_mountain_1_puresky_4k.hdr");
 
-	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, 1.f, -5.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
-	//primitives.push_back(sphere);
+	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, 0.f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	primitives.push_back(sphere);
 
-	LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.f, 0.0f), 1.f, 0.f);
+	//LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, 0.f, 0.0f), 0.5f, 180.f);
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(1.f, 5.f, -10.0f));
 #else
-	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 3.f, -1.5f), float3(1.5f, 3.f, -1.5f), float3(1.5f, 3.f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 3.f, 1.5f), float3(-1.5f, 3.f, -1.5f), float3(1.5f, 3.f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	//primitives.push_back(light1);
-	//primitives.push_back(light2);
+	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 0.8f, 1.5f), float3(-1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	primitives.push_back(light1);
+	primitives.push_back(light2);
 #endif
 	auto start = high_resolution_clock::now();
 	bvh = new Bvh(primitives, data);
@@ -68,7 +68,11 @@ Scene::Scene(DataCollector* data2)
 	auto duration = duration_cast<milliseconds>(stop - start);
 	data->UpdateBuildTime(duration.count());
 
-	bvh->CollapseBVH(Bvh::rootNodeIdx);
+	bvh->ResetNodesUsed();
+
+	bvh->CollapseBVH(Bvh::rootNodeIdx, 0);
+
+	data->UpdateQBVHNodeCount(bvh->GetNodesUsed());
 }
 
 void Scene::FindNearest(Ray& ray)
@@ -128,7 +132,7 @@ float3 Scene::GetBeersLaw(Ray& ray)
 	return 1;
 }
 
-void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, const float3& offset, float scale, float angle)
+void Scene::LoadModel(int triIdx, const char* fileName, Material material, const float3& offset, float scale, float angle)
 {
 	mat4 rotate = mat4::RotateY(angle);
 	mat4 transform = mat4::Translate(offset.x, offset.y, offset.z) * rotate;
@@ -204,13 +208,16 @@ void Scene::LoadModelNew(int triIdx, const char* fileName, Material material, co
 
 float3 Scene::GetAlbedo(Ray& ray, const float3& N)
 {
-	return ray.objMaterial.colour;
-	/*if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
+#ifdef TEXTURES
+	if (ray.objType == ObjectType::SPHERE) return spheres[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::PLANE) return planes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CUBE) return cubes[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::TRIANGLE) return triangles[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
 	if (ray.objType == ObjectType::CYLINDER) return cylinders[ray.objIdx].GetTexture(ray.IntersectionPoint(), N);
-	return (0, 1, 0);*/
+	return (0, 1, 0);
+#else
+	return ray.objMaterial.colour;
+#endif
 }
 
 float3 Scene::GetSkydomeTexture(const Ray& ray)

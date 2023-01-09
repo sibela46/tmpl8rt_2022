@@ -22,8 +22,13 @@ void DataCollector::ResetDataCollector() {
 void DataCollector::UpdateBuildTime(float bt) {
     bvhBuildTime = bt;
 }
+
 void DataCollector::UpdateNodeCount(int nc) {
     nodeCount = nc;
+}
+
+void DataCollector::UpdateQBVHNodeCount(int nc) {
+    qbvhNodeCount = nc;
 }
 
 void DataCollector::UpdateFPS(float fps) {
@@ -72,13 +77,14 @@ void DataCollector::UpdateTreeDepth(bool isLeaf) {
 void DataCollector::PrintData(std::string filename) {
     std::ofstream myFile(filename);
 
-    myFile << bvhBuildTime << "\n";
-    myFile << GetAverageFPS() << "\n";
-    myFile << nodeCount << "\n";
+    myFile << "BVH Build Time " << bvhBuildTime << "\n";
+    myFile << "Average FPS " << GetAverageFPS() << "\n";
+    myFile << "Node count " << nodeCount << "\n";
+    myFile << "QBVH Node count " << qbvhNodeCount << "\n";
     //myFile << summedNodeArea << "\n";
     //myFile << GetAverageTraversalSteps() << "\n";
-    myFile << GetIntersectedPrimitives() << "\n";
-    myFile << maxTreeDepth << "\n";
+    myFile << "Intersected primitives num. " << GetIntersectedPrimitives() << "\n";
+    myFile << "Max tree depth " << maxTreeDepth << "\n";
 
     myFile.close();
 }

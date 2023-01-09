@@ -37,17 +37,27 @@ void Bvh::BuildBVH()
     data->UpdateNodeCount(nodesUsed);
 }
 
-void Bvh::CollapseBVH(uint nodeIdx)
+void Bvh::CollapseBVH(uint nodeIdx, int depth)
 {
     BVHNode& node = bvhNodes[nodeIdx];
     QBVHNode& newNode = qbvhNodes[nodeIdx];
 
     if (node.isLeaf()) return;
 
+    if (depth > (data->maxTreeDepth)) data->maxTreeDepth = depth;
+
+    nodesUsed++;
+
     int leftChildIdx = node.leftFirst;
     BVHNode& leftChild = bvhNodes[leftChildIdx];
     int rightChildIdx = node.leftFirst + 1;
     BVHNode& rightChild = bvhNodes[rightChildIdx];
+
+    aabb leftBox, rightBox;
+    leftBox.Grow(leftChild.aabbMin);
+    leftBox.Grow(leftChild.aabbMax);
+    rightBox.Grow(rightChild.aabbMin);
+    rightBox.Grow(rightChild.aabbMax);
 
     int i = 0;
     if (leftChild.isLeaf())
@@ -101,8 +111,8 @@ void Bvh::CollapseBVH(uint nodeIdx)
     newNode.aabbzMin4 = _mm_set_ps(newNode.aabbMin[0].z, newNode.aabbMin[1].z, newNode.aabbMin[2].z, newNode.aabbMin[3].z);
     newNode.aabbzMax4 = _mm_set_ps(newNode.aabbMax[0].z, newNode.aabbMax[1].z, newNode.aabbMax[2].z, newNode.aabbMax[3].z);*/
 
-    CollapseBVH(node.leftFirst);
-    CollapseBVH(node.leftFirst + 1);
+    CollapseBVH(node.leftFirst, depth+1);
+    CollapseBVH(node.leftFirst + 1, depth+1);
 }
 
 void Bvh::UpdateNodeBounds(uint nodeIdx)
@@ -292,10 +302,8 @@ void Bvh::IntersectQBVH(Ray& ray, const uint nodeIdx)
         if (!IntersectAABB(ray, node.aabbMin[c], node.aabbMax[c])) continue;
         if (node.isLeaf(c)) // isLeaf
         {
-            for (uint i = 0; i < node.count[c]; i++) {
+            for (uint i = 0; i < node.count[c]; i++)
                 primitives[primitivesIndices[node.child[c] + i]].Intersect(ray);
-                data->UpdateIntersectedPrimitives();
-            }
         }
         else
         {
@@ -311,10 +319,8 @@ void Bvh::IntersectBVH(Ray& ray, const uint nodeIdx)
 
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++) {
+        for (uint i = 0; i < node.primitivesCount; i++)
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(ray);
-            data->UpdateIntersectedPrimitives();
-        }
     }
     else
     {
@@ -330,10 +336,8 @@ void Bvh::IntersectBVH(const float3& O, const float3& D, const uint nodeIdx, con
     if (!IntersectAABB(O, D, distToLight, node.aabbMin, node.aabbMax)) return;
     if (node.isLeaf())
     {
-        for (uint i = 0; i < node.primitivesCount; i++) {
+        for (uint i = 0; i < node.primitivesCount; i++)
             primitives[primitivesIndices[node.leftFirst + i]].Intersect(O, D, distToLight, hitObject);
-            data->UpdateIntersectedPrimitives();
-        }
     }
     else
     {

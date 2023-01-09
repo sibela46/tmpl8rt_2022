@@ -19,11 +19,12 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 30) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth == 10) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	
+	if (depth == 0) data->UpdateIntersectedPrimitives();
+
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
-	/* visualize normal */ // return (N + 1) * 0.5f;
-	/* visualize distance */ // return 0.1f * float3( ray.t, ray.t, ray.t );
 
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
@@ -37,12 +38,12 @@ float3 Renderer::Trace( Ray& ray, int depth )
 		float3 illumination = 0;
 		for (int i = 0; i < 1; ++i)
 		{
-			float3 randomUnitVec = normalize(SampleHemisphere(N));
+			float3 randomUnitVec = SampleHemisphere(N);
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
 			float3 incoming = Trace(newRay, depth + 1);
-			float3 BRDF = scene->GetAlbedo(ray, N); // this should be divided by PI
+			float3 BRDF = scene->GetAlbedo(ray, N) * INVPI; // this should be divided by PI
 			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
-			illumination += 2.f * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
+			illumination += 2.f * PI * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
 		}
 
 		return illumination / 1;
@@ -168,7 +169,6 @@ void Renderer::Tick( float deltaTime )
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
 	if (alpha > 0.05f) alpha *= 0.5f;
 	float fps = 1000 / avg, rps = (SCRWIDTH * SCRHEIGHT) * fps;
-	printf("Camera position: %f %f %f\n", camera.camPos.x, camera.camPos.y, camera.camPos.z);
 	printf( "%5.2fms (%.1fps) - %.1fMrays/s\n", avg, fps, rps / 1000000 );
 	data->UpdateFPS(fps);
 }

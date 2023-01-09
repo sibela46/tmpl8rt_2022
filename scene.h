@@ -15,16 +15,11 @@ public:
 	float3 GetSkydomeTexture(const Ray& ray);
 	void SetObjTranslate(float3 pos);
 
-	void LoadModelNew(int idx, const char* fileName, Material material, const float3& offset, float scale, float angle);
+	void LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale, float angle);
 
 public:
-	std::vector<Triangle> triangles;
 	Bvh* bvh;
-	std::vector<Plane> planes;
-	std::vector<Sphere> spheres;
-	std::vector<Cube> cubes;
-	std::vector<Torus> tori;
-	std::vector<Cylinder> cylinders;
+	std::vector<Primitive> planes;
 	std::vector<Primitive> primitives;
 	Light* light;
 	TextureMap* skydomeTexture;
