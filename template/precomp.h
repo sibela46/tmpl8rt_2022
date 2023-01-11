@@ -18,6 +18,9 @@
 #include <algorithm>
 #include <assert.h>
 #include <io.h>
+#include <numeric>
+#include <exception>
+#include <functional>
 
 // header for AVX, and every technology before it.
 // if your CPU does not support this (unlikely), include the appropriate header instead.
@@ -1706,8 +1709,9 @@ public:
 };
 
 // Material structure
-enum class MaterialType { DIFFUSE = 0, MIRROR = 1, GLASS = 2, LIGHT = 3 };
+enum class MaterialType { DIFFUSE = 0, SPECULAR = 1, MIRROR = 2, GLASS = 3, LIGHT = 4 };
 enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, CYLINDER = 4, TORUS = 5 };
+enum class LightType { POINT = 0, DIRECTIONAL = 1, AREA = 2 };
 
 struct Material
 {
@@ -1723,6 +1727,8 @@ struct Material
 #include "Cube.h"
 #include "DataCollector.h"
 #include "primitive.h"
+#include "KDTree.h"
+#include "PhotonMap.h"
 #include "Bvh.h"
 #include "Scene.h"
 #include "camera.h"

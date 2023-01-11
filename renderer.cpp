@@ -41,9 +41,9 @@ float3 Renderer::Trace( Ray& ray, int depth )
 			float3 randomUnitVec = SampleHemisphere(N);
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
 			float3 incoming = Trace(newRay, depth + 1);
-			float3 BRDF = scene->GetAlbedo(ray, N) * INVPI; // this should be divided by PI
+			float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
 			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
-			illumination += 2.f * PI * cos_i * BRDF; // this should be multiplied by PI but it's cancelled by the 1/PI in BRDF
+			illumination += 2.f * PI * cos_i * BRDF;
 		}
 
 		return illumination / 1;
@@ -100,6 +100,27 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	return 0;
 }
 
+float3 Renderer::PhotonTrace(Ray& ray, int depth)
+{
+	scene->FindNearest(ray);
+
+	if (ray.objIdx == -1 || depth >= MAX_DEPTH) return BLACK;
+
+	if (ray.objMaterial.type == MaterialType::LIGHT) return BRIGHT;
+	
+	if (ray.objMaterial.type == MaterialType::DIFFUSE)
+	{
+		if (depth >= GATHER_DEPTH)
+		{
+			return scene->GetRadianceFromPhotonMap(ray);
+		}
+		const float3 Ld = scene->GetDirectIllumination(ray);
+		const float3 Lc = scene->GetCausticsIllumination();
+		const float3 Li = scene->GetIndirectIllumination();
+		return (Ld + Lc + Li);
+	}
+}
+
 float3 Renderer::SampleHemisphere(const float3& N)
 {
 	float r1 = RandomFloat();
@@ -125,7 +146,7 @@ float3 Renderer::GenerateRandomVec(const float3& N)
 
 float3 Renderer::GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D)
 {
-	float3 distToLight = normalize(light->position - I);
+	float3 distToLight = normalize(light->GetPosition() - I);
 	float A = 4 * PI * dot(distToLight, distToLight);
 	float3 B = light->GetColour() / A;
 	float3 reflected = normalize(reflect(-distToLight, N));

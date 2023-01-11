@@ -25,42 +25,36 @@ Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 Scene::Scene(DataCollector* data2)
 {
 	data = data2;
-	Primitive plane1 = { 0, ObjectType::PLANE, float3(0), float3(1, 0, 0), float3(0), float3(0), float3(1, 0, 0), 2.f, 0.f, 0.f, purpleDiffuse }; // left wall
-	Primitive plane2 = { 1, ObjectType::PLANE, float3(0), float3(-1, 0, 0), float3(0), float3(0), float3(-1, 0, 0), 2.f, 0.f, 0.f, blueDiffuse }; // right wall
-	Primitive plane3 = { 2, ObjectType::PLANE, float3(0), float3(0, -1, 0), float3(0), float3(0), float3(0, -1, 0), 2.f, 0.f, 0.f, whiteDiffuse }; // ceiling
-	Primitive plane4 = { 3, ObjectType::PLANE, float3(0), float3(0, 1, 0), float3(0), float3(0), float3(0, 1, 0), 1.f, 0.f, 0.f, whiteDiffuse }; // floor wall
-	Primitive plane5 = { 4, ObjectType::PLANE, float3(0), float3(0, 0, 1), float3(0), float3(0), float3(0, 0, 1), 3.f, 0.f, 0.f, whiteDiffuse }; // front wall
-	Primitive plane6 = { 5, ObjectType::PLANE, float3(0), float3(0, 0, -1), float3(0), float3(0), float3(0, 0, -1), 2.f, 0.f, 0.f, whiteDiffuse }; // back wall
-	
-	/*planes.push_back(plane1);
+	Primitive plane1 = Primitive(0, ObjectType::PLANE, float3(1, 0, 0), 2.f, purpleDiffuse); // left wall
+	Primitive plane2 = Primitive(1, ObjectType::PLANE, float3(-1, 0, 0), 2.f, blueDiffuse); // right wall
+	Primitive plane3 = Primitive(2, ObjectType::PLANE, float3(0, -1, 0), 2.f, whiteDiffuse); // ceiling
+	Primitive plane4 = Primitive(3, ObjectType::PLANE, float3(0, 1, 0), 1.f, whiteDiffuse); // floor wall
+	Primitive plane5 = Primitive(4, ObjectType::PLANE, float3(0, 0, 1), 3.f, whiteDiffuse); // front wall
+	Primitive plane6 = Primitive(5, ObjectType::PLANE, float3(0, 0, -1), 2.f, whiteDiffuse); // back wall
+
+	planes.push_back(plane1);
 	planes.push_back(plane2);
 	planes.push_back(plane3);
 	planes.push_back(plane4);
 	planes.push_back(plane5);
-	planes.push_back(plane6);*/
-
-	//planes.emplace_back(Plane(0, float3(1, 0, 0), 2.f, purpleDiffuse)); // left wall
-	//planes.emplace_back(Plane(1, float3(-1, 0, 0), 2.f, blueDiffuse)); // right wall
-	//planes.emplace_back(Plane(2, float3(0, -1, 0), 2.f, whiteDiffuse)); // ceiling
-	//planes.emplace_back(Plane(3, float3(0, 1, 0), 1.f, whiteDiffuse)); // floor
-	//planes.emplace_back(Plane(4, float3(0, 0, 1), 3.f, whiteDiffuse)); // front wall
-	//planes.emplace_back(Plane(5, float3(0, 0, -1), 2.f, whiteDiffuse)); // back wall
+	planes.push_back(plane6);
 
 	skydomeTexture = new TextureMap("\\assets\\table_mountain_1_puresky_4k.hdr");
 
-	Primitive sphere = { 0, ObjectType::SPHERE, float3(0), float3(0.f, 0.f, 0.f), float3(0), float3(0), float3(0), 0.5f, 0.f, 0.f, whiteDiffuse};
+	Primitive sphere = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(0.0f, 0.0f, 0.f), 0.5f, whiteDiffuse);
 	primitives.push_back(sphere);
 
-	//LoadModelNew(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, 0.f, 0.0f), 0.5f, 180.f);
+	//LoadModel(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, 0.f, 0.0f), 0.5f, 180.f);
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(1.f, 5.f, -10.0f));
+	light = new Light(float3(1.f, 5.f, -10.0f), LightType::POINT);
 #else
-	Primitive light1 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
-	Primitive light2 = { primitives.size(), ObjectType::TRIANGLE, float3(0), float3(-1.5f, 0.8f, 1.5f), float3(-1.5f, 0.8f, -1.5f), float3(1.5f, 0.8f, 1.5f), float3(0, -1, 0), 0.f, 0.f, 0.f, areaLight };
+	Primitive light1 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, float3(-1.0f, 0.8f, 0.f), float3(1.0f, 0.8f, 0.f), float3(1.0f, 0.8f, 1.0f), float3(0.f, -1.f, 0.f), areaLight);
+	Primitive light2 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, float3(-1.0f, 0.8f, 0.f), float3(-1.0f, 0.8f, 1.0f), float3(1.0f, 0.8f, 1.0f), float3(0.f, -1.f, 0.f), areaLight);
 	primitives.push_back(light1);
 	primitives.push_back(light2);
 #endif
+
 	auto start = high_resolution_clock::now();
 	bvh = new Bvh(primitives, data);
 	bvh->BuildBVH();
@@ -88,12 +82,31 @@ void Scene::FindNearest(Ray& ray)
 #endif // SSE
 }
 
+void Scene::BuildPhotonMap()
+{
+	photonMap = new PhotonMap();
+
+	for (int i = 0; i < NUM_PHOTONS; ++i)
+	{
+		float3 origin = float3(0), direction = float3(0);
+		light->RandomPhotonDirectionAndPosition(origin, direction);
+		Ray photonRay(origin, direction);
+		FindNearest(photonRay);
+		if (photonRay.objIdx != -1 && photonRay.objMaterial.type == MaterialType::DIFFUSE)
+		{
+			photonMap->AddPhoton(Photon(photonRay.objMaterial.colour, photonRay.IntersectionPoint(), photonRay.D));
+		}
+	}
+
+	photonMap->Build();
+}
+
 bool Scene::IsOccluded(const Ray& ray)
 {
 	float3 bias = 0.001f * ray.normal;
 	float3 I = ray.O + ray.t * ray.D;
 	float3 origin = ray.inside ? I - bias : I + bias;
-	float3 dirToLight = (light->position - I);
+	float3 dirToLight = (light->GetPosition() - I);
 	Ray rayToLight = Ray(origin, normalize(dirToLight));
 	bool hitSomething = false;
 	bvh->IntersectBVH(rayToLight.O, rayToLight.D, Bvh::rootNodeIdx, length(dirToLight), hitSomething);
@@ -195,7 +208,7 @@ void Scene::LoadModel(int triIdx, const char* fileName, Material material, const
 				// tinyobj::real_t green = attrib.colors[3*size_t(idx.vertex_index)+1];
 				// tinyobj::real_t blue  = attrib.colors[3*size_t(idx.vertex_index)+2];
 			}
-			Primitive primitive = { triIdx, ObjectType::TRIANGLE, float3(0), vertices[0], vertices[1], vertices[2], normal, 0.f, 0.f, 0.f, material};
+			Primitive primitive = Primitive(triIdx, ObjectType::TRIANGLE, vertices[0], vertices[1], vertices[2], normal, material);
 			primitives.push_back(primitive);
 
 			index_offset += fv;
@@ -231,7 +244,45 @@ float3 Scene::GetSkydomeTexture(const Ray& ray)
 	return skydomeTexture->GetColourAt(u, v);
 }
 
-void Scene::SetObjTranslate(float3 pos)
+float3 Scene::GetDirectIllumination(const Ray& ray)
 {
-	light->position += pos;
+	if (IsOccluded(ray)) return 0;
+	const float3 dirToLight = normalize(light->GetPosition() - ray.IntersectionPoint());
+	const float r = length(light->GetPosition() - ray.IntersectionPoint());
+	const float pdf_dir = r * r / abs(dot(-dirToLight, light->GetNormal()));
+	const float3 f = ray.objMaterial.colour;
+	const float cos = abs(dot(dirToLight, ray.normal));
+	return f * cos * light->GetEmission() / pdf_dir;
+}
+
+float3 Scene::GetIndirectIllumination()
+{
+	return float3(0.1);
+}
+
+float3 Scene::GetCausticsIllumination()
+{
+	return float3(0);
+}
+
+float3 Scene::GetRadianceFromPhotonMap(const Ray& ray)
+{
+	float max_dist2;
+
+	Photon photon(ray.objMaterial.colour, ray.IntersectionPoint(), -ray.D);
+	const std::vector<int> photonIndices = photonMap->QueryKNearestPhotons(photon, K);
+
+	float3 Lo;
+	for (const int photonIdx : photonIndices)
+	{
+		const Photon& photon = photonMap->GetPhoton(photonIdx);
+		Lo += ray.objMaterial.colour * photon.flux;
+	}
+
+	if (photonIndices.size() > 0)
+	{
+		Lo /= (NUM_PHOTONS * PI);
+	}
+
+	return Lo;
 }

@@ -25,7 +25,7 @@ public:
 		rDz4 = _mm_set_ps1(1 / direction.z);
 		t4 = _mm_set_ps1(distance);
 	}
-	float3 IntersectionPoint() { return (O + t * D); }
+	float3 IntersectionPoint() const { return (O + t * D); }
 	__m128 IntersectionPointX() { return _mm_add_ps(Ox4, _mm_mul_ps(t4, Dx4)); }
 	__m128 IntersectionPointY() { return _mm_add_ps(Oy4, _mm_mul_ps(t4, Dy4)); }
 	__m128 IntersectionPointZ() { return _mm_add_ps(Oz4, _mm_mul_ps(t4, Dz4)); }

@@ -13,7 +13,13 @@ public:
 	float3 GetShade(const Ray& ray);
 	float3 GetAlbedo(Ray& ray, const float3& N);
 	float3 GetSkydomeTexture(const Ray& ray);
-	void SetObjTranslate(float3 pos);
+
+	float3 GetDirectIllumination(const Ray& ray);
+	float3 GetIndirectIllumination();
+	float3 GetCausticsIllumination();
+	float3 GetRadianceFromPhotonMap(const Ray& ray);
+
+	void BuildPhotonMap();
 
 	void LoadModel(int idx, const char* fileName, Material material, const float3& offset, float scale, float angle);
 
@@ -22,6 +28,7 @@ public:
 	std::vector<Primitive> planes;
 	std::vector<Primitive> primitives;
 	Light* light;
+	PhotonMap* photonMap;
 	TextureMap* skydomeTexture;
 	float3 objTranslate;
 	DataCollector* data;

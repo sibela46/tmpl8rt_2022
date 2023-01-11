@@ -1,40 +1,78 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="renderer.cpp" />
     <ClCompile Include="template\template.cpp">
       <Filter>template</Filter>
     </ClCompile>
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="Bvh.cpp" />
-    <ClCompile Include="DataCollector.cpp" />
-    <ClCompile Include="Cube.cpp" />
-    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Bvh.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="DataCollector.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="PhotonMap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="camera.h" />
-    <ClInclude Include="renderer.h" />
     <ClInclude Include="template\common.h">
       <Filter>template</Filter>
     </ClInclude>
     <ClInclude Include="template\precomp.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="Bvh.h" />
     <ClInclude Include="template\ray.h">
       <Filter>template</Filter>
     </ClInclude>
     <ClInclude Include="primitive.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="DataCollector.h" />
-    <ClInclude Include="Cube.h" />
-    <ClInclude Include="Light.h" />
+    <ClInclude Include="Bvh.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="camera.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="DataCollector.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="PhotonMap.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="KDTree.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="template">
       <UniqueIdentifier>{a7d6e3cb-bfcd-438d-979f-17df241a55b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2735ce9c-a7b9-4772-bb16-365fd9960c74}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,13 +80,5 @@
       <Filter>template</Filter>
     </None>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="template\bunny.obj">
-      <Filter>template</Filter>
-    </Object>
-    <Object Include="template\sphere.obj">
-      <Filter>template</Filter>
-    </Object>
   </ItemGroup>
 </Project>

@@ -2,6 +2,15 @@
 
 struct Primitive {
 	int index; ObjectType type; float3 centroid; float3 v1; float3 v2; float3 v3; float3 n; float size; float u; float v; Material material;
+	Primitive() {}
+	Primitive(int index, ObjectType type, float3 v1, float3 v2, float3 v3, float3 n, Material material) // triangle
+		: index(index), type(type), v1(v1), v2(v2), v3(v3), n(n), material(material)
+	{
+	}
+	Primitive(int index, ObjectType type, float3 v1, float size, Material material) // sphere and plane
+		: index(index), type(type), v1(v1), n(v1), size(size), material(material)
+	{
+	}
 	void CalculateCentroid()
 	{
 		switch (type)
@@ -53,20 +62,20 @@ struct Primitive {
 		switch (type)
 		{
 		case ObjectType::TRIANGLE:
-		{
-			IntersectTriangle(O, D, distToLight, hitObject);
-		}
-		break;
+			{
+				IntersectTriangle(O, D, distToLight, hitObject);
+			}
+			break;
 		case ObjectType::SPHERE:
-		{
-			IntersectSphere(O, D, distToLight, hitObject);
-		}
-		break;
+			{
+				IntersectSphere(O, D, distToLight, hitObject);
+			}
+			break;
 		case ObjectType::PLANE:
-		{
-			IntersectPlane(O, D, distToLight, hitObject);
-		}
-		break;
+			{
+				IntersectPlane(O, D, distToLight, hitObject);
+			}
+			break;
 		}
 	}
 	void IntersectTriangle(Ray& ray)

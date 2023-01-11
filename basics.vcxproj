@@ -126,6 +126,7 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DataCollector.cpp" />
     <ClCompile Include="Light.cpp" />
+    <ClCompile Include="PhotonMap.cpp" />
     <ClCompile Include="renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="template\template.cpp">
@@ -138,7 +139,9 @@
     <ClInclude Include="camera.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="DataCollector.h" />
+    <ClInclude Include="KDTree.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="PhotonMap.h" />
     <ClInclude Include="primitive.h" />
     <ClInclude Include="renderer.h" />
     <ClInclude Include="Scene.h" />
@@ -149,17 +152,6 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="template\LICENSE" />
-  </ItemGroup>
-  <ItemGroup>
-    <Object Include="template\bunny.obj">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </Object>
-    <Object Include="template\sphere.obj">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
