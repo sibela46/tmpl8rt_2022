@@ -1724,6 +1724,7 @@ struct Material
 
 #include "ray.h"
 #include "Light.h"
+#include "AreaLight.h"
 #include "Cube.h"
 #include "DataCollector.h"
 #include "primitive.h"

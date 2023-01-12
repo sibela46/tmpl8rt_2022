@@ -49,7 +49,7 @@ void Light::RandomPhotonDirectionAndPosition(float3& pos, float3& dir)
 	}
 }
 
-float3 Light::GetPosition()
+float3 Light::GetPosition(int i)
 {
 	return position;
 }
@@ -66,12 +66,15 @@ float3 Light::GetColour()
 
 float3 Light::GetNormal()
 {
-	switch (type)
-	{
-	case LightType::POINT:
-		{
-			return float3(0, -1, 0);
-		}
-		break;
-	}
+	return 0;
+}
+
+float3 Light::GetRandomPoint()
+{
+	return 0;
+}
+
+float Light::GetArea()
+{
+	return 0;
 }

@@ -7,10 +7,12 @@ public:
 
 	void	RandomPhotonDirectionAndPosition(float3& pos, float3& dir);
 
-	float3	GetPosition();
+	virtual float3	GetPosition(int i = 0);
+	virtual float3	GetNormal();
+	virtual float3	GetRandomPoint();
+	virtual float	GetArea();
 	float	GetEmission();
 	float3	GetColour();
-	float3	GetNormal();
 
 public:
 	float3 position;

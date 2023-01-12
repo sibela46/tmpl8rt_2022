@@ -25,6 +25,9 @@
     <ClCompile Include="PhotonMap.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="AreaLight.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="template\common.h">
@@ -64,6 +67,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="KDTree.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="AreaLight.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,6 +26,7 @@
 #define MAX_DEPTH		10
 #define GATHER_DEPTH	10
 #define K				5
+#define NUM_SAMPLES		3
 
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:
 // Without a GPU, a laptop needs at least a 'Broadwell' Intel CPU (5th gen, 2015):

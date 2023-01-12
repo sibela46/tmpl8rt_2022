@@ -19,7 +19,7 @@ Material blackShiny = { BLACK,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greyShiny = { GREY,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { PURPLE,  MaterialType::GLASS, 0.0, 1.0 };
+Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene(DataCollector* data2)
@@ -41,16 +41,20 @@ Scene::Scene(DataCollector* data2)
 
 	skydomeTexture = new TextureMap("\\assets\\table_mountain_1_puresky_4k.hdr");
 
-	Primitive sphere = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(0.0f, 0.0f, 0.f), 0.5f, whiteDiffuse);
-	primitives.push_back(sphere);
+	/*Primitive sphere = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(-0.5f, 0.0f, 0.f), 0.5f, mirror);
+	primitives.push_back(sphere);*/
+	Primitive sphere1 = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(0.5f, 0.0f, 0.f), 0.5f, whiteDiffuse);
+	primitives.push_back(sphere1);
 
 	//LoadModel(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, 0.f, 0.0f), 0.5f, 180.f);
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(1.f, 5.f, -10.0f), LightType::POINT);
 #else
-	Primitive light1 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, float3(-1.0f, 0.8f, 0.f), float3(1.0f, 0.8f, 0.f), float3(1.0f, 0.8f, 1.0f), float3(0.f, -1.f, 0.f), areaLight);
-	Primitive light2 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, float3(-1.0f, 0.8f, 0.f), float3(-1.0f, 0.8f, 1.0f), float3(1.0f, 0.8f, 1.0f), float3(0.f, -1.f, 0.f), areaLight);
+	light = new AreaLight(float3(-1.0f, 1.8f, 0.f), float3(1.0f, 1.8f, 0.f), float3(-1.0f, 1.8f, 1.0f), float3(1.0f, 1.8f, 1.0f));
+
+	Primitive light1 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, light->GetPosition(0), light->GetPosition(1), light->GetPosition(2), light->GetNormal(), areaLight);
+	Primitive light2 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, light->GetPosition(1), light->GetPosition(2), light->GetPosition(3), light->GetNormal(), areaLight);
 	primitives.push_back(light1);
 	primitives.push_back(light2);
 #endif
@@ -71,6 +75,7 @@ Scene::Scene(DataCollector* data2)
 
 void Scene::FindNearest(Ray& ray)
 {
+
 	for (int i = 0; i < planes.size(); ++i)
 	{
 		planes[i].Intersect(ray);
@@ -143,6 +148,13 @@ float3 Scene::GetBeersLaw(Ray& ray)
 		return float3(pow(E, absorbance.x), pow(E, absorbance.y), pow(E, absorbance.z));
 	}
 	return 1;
+}
+
+void Scene::RandomPointOnLight(float3& L, float3& NL, float& A)
+{
+	L = light->GetRandomPoint();
+	NL = light->GetNormal();
+	A = light->GetArea();
 }
 
 void Scene::LoadModel(int triIdx, const char* fileName, Material material, const float3& offset, float scale, float angle)

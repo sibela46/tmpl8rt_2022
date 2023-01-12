@@ -122,6 +122,7 @@
   </ItemDefinitionGroup>
   <!-- END Custom section -->
   <ItemGroup>
+    <ClCompile Include="AreaLight.cpp" />
     <ClCompile Include="Bvh.cpp" />
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DataCollector.cpp" />
@@ -135,6 +136,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AreaLight.h" />
     <ClInclude Include="Bvh.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Cube.h" />

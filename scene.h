@@ -13,6 +13,7 @@ public:
 	float3 GetShade(const Ray& ray);
 	float3 GetAlbedo(Ray& ray, const float3& N);
 	float3 GetSkydomeTexture(const Ray& ray);
+	void RandomPointOnLight(float3& L, float3& NL, float& A);
 
 	float3 GetDirectIllumination(const Ray& ray);
 	float3 GetIndirectIllumination();

@@ -19,7 +19,7 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth == 10) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (ray.objIdx == -1 || depth >= MAX_DEPTH) return scene->GetSkydomeTexture(ray); // or a fancy sky color
 	
 	if (depth == 0) data->UpdateIntersectedPrimitives();
 
@@ -32,21 +32,28 @@ float3 Renderer::Trace( Ray& ray, int depth )
 		return scene->GetAlbedo(ray, ray.normal) * scene->GetShade(ray);
 #else
 		float3 bias = 0.001f * N;
-		//bool outside = dot(ray.D, N) < 0;
 		float3 rayOrigin = I + bias;
 
 		float3 illumination = 0;
-		for (int i = 0; i < 1; ++i)
+
+		for (int i = 0; i < NUM_SAMPLES; ++i)
 		{
-			float3 randomUnitVec = SampleHemisphere(N);
+			float p = 0.5f;
+			if (RandomFloat() >= p)
+				return illumination;
+
+			illumination *= (1 / p);
+			float3 randomUnitVec = CosineSampleHemisphere(N);
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
 			float3 incoming = Trace(newRay, depth + 1);
 			float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
 			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
 			illumination += 2.f * PI * cos_i * BRDF;
 		}
+		
+		illumination /= NUM_SAMPLES;
 
-		return illumination / 1;
+		return illumination;
 #endif
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
@@ -100,6 +107,67 @@ float3 Renderer::Trace( Ray& ray, int depth )
 	return 0;
 }
 
+float3 Renderer::Sample(Ray& ray)
+{
+	float3 T = 1;
+	float3 R = 0;
+
+	int depth = 0;
+	float p = 0.5f;
+	while (1)
+	{
+		depth++;
+		scene->FindNearest(ray);
+		float3 BRDF = ray.objMaterial.colour * INVPI;
+		float3 N = scene->GetNormal(ray);
+		if (ray.objIdx == -1) break; // NO HIT
+		if (ray.objMaterial.type == MaterialType::LIGHT) return BRIGHT; // LIGHT HIT
+
+		float3 L, NL;
+		float A;
+		scene->RandomPointOnLight(L, NL, A);
+		float3 bias = 0.001f * N;
+		float3 rayOrigin = ray.IntersectionPoint() + bias;
+		Ray lightRay(rayOrigin, L);
+		if (dot(N, L) > 0 && dot(NL, -L) > 0)
+		{
+			scene->FindNearest(lightRay);
+			if (lightRay.objMaterial.type == MaterialType::LIGHT)
+			{
+				float solidAngle = (dot(NL, -L) * A) / (lightRay.t * lightRay.t);
+				float lightPDF = 1 / solidAngle;
+				R += T * (dot(N, L) / lightPDF) * BRDF * 1.0f;
+			}
+		}
+
+		if (RandomFloat() > 0.5f)
+		{
+			break;
+		}
+
+		T *= 1/0.5f;
+
+		float3 randomUnitVec = CosineSampleHemisphere(N);
+		ray = Ray(rayOrigin, randomUnitVec);
+		float hemiPDF = 1 / (PI * 2.f);
+		T *= (dot(randomUnitVec, N) / hemiPDF) * BRDF;
+	}
+
+	return R;
+}
+
+float Renderer::RussianRoulette(const float3& illumination)
+{
+	float random = RandomFloat();
+	float p = min(max(illumination.x, max(illumination.y, illumination.z)), 1.f);
+	if (random > p)
+	{
+		return 0;
+	}
+
+	return 1/p;
+}
+
 float3 Renderer::PhotonTrace(Ray& ray, int depth)
 {
 	scene->FindNearest(ray);
@@ -132,6 +200,27 @@ float3 Renderer::SampleHemisphere(const float3& N)
 	float3 randomVec = float3(x, r1, z);
 	if (dot(randomVec, N) < 0) randomVec = -randomVec;
 	return randomVec;
+}
+
+float3 Renderer::CosineSampleHemisphere(const float3& N)
+{
+	float r1 = 2.0f * PI * RandomFloat();
+	float r2 = RandomFloat();
+	float r2s = sqrt(r2);
+
+	float3 w = N;
+	float3 u;
+	if (fabs(w.x) > 0.1f)
+		u = cross(float3(0.f, 1.f, 0.f), w);
+	else
+		u = cross(float3(1.f, 0.f, 0.f), w);
+
+	u = normalize(u);
+	float3 v = cross(w, u);
+	float3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2));
+	d = normalize(d);
+
+	return d;
 }
 
 float3 Renderer::GenerateRandomVec(const float3& N)
@@ -173,7 +262,7 @@ void Renderer::Tick( float deltaTime )
 		for (int x = 0; x < SCRWIDTH; x++)
 		{
 			Ray primaryRay = camera.GetPrimaryRay(x, y);
-			accumulator[x + y * SCRWIDTH] += float4(Trace(primaryRay, 0), 0);
+			accumulator[x + y * SCRWIDTH] += float4(Sample(primaryRay), 0);
 		}
 		// translate accumulator contents to rgb32 pixels
 		for (int dest = y * SCRWIDTH, x = 0; x < SCRWIDTH; x++)

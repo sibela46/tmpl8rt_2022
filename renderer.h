@@ -9,10 +9,13 @@ namespace Tmpl8
 		// game flow methods
 		void Init();
 		float3 Trace(Ray& ray, int depth);
+		float3 Sample(Ray& ray);
 		float3 PhotonTrace(Ray& ray, int depth);
 		float3 GenerateRandomVec(const float3& N);
 		float3 SampleHemisphere(const float3& N);
+		float3 CosineSampleHemisphere(const float3& N);
 		float3 GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
+		float RussianRoulette(const float3& illumination);
 		void Tick(float deltaTime);
 		void Shutdown() { /* implement if you want to do something on exit */ }
 		// input handling
