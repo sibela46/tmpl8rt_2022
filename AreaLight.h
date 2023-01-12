@@ -7,10 +7,11 @@ public:
 	
 	float3	GetPosition(int i) override;
 	float3	GetNormal() override;
-	float3	GetRandomPoint() override;
+	float3	GetRandomPoint(int idx) override;
 	float	GetArea() override;
 
 public:
 	std::vector<float3> corners;
 	LightType type;
+	float area;
 };

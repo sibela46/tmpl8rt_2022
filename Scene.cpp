@@ -41,15 +41,15 @@ Scene::Scene(DataCollector* data2)
 
 	skydomeTexture = new TextureMap("\\assets\\table_mountain_1_puresky_4k.hdr");
 
-	/*Primitive sphere = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(-0.5f, 0.0f, 0.f), 0.5f, mirror);
-	primitives.push_back(sphere);*/
-	Primitive sphere1 = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(0.5f, 0.0f, 0.f), 0.5f, whiteDiffuse);
+	Primitive sphere = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(-0.5f, 0.0f, 0.f), 0.5f, mirror);
+	//primitives.push_back(sphere);
+	Primitive sphere1 = Primitive(planes.size() + primitives.size(), ObjectType::SPHERE, float3(0.0f, 0.0f, 0.f), 0.5f, whiteDiffuse);
 	primitives.push_back(sphere1);
 
-	//LoadModel(primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, 0.f, 0.0f), 0.5f, 180.f);
+	//LoadModel(planes.size() + primitives.size(), "assets\\bunny.obj", whiteDiffuse, float3(0.0f, -2.0f, 0.0f), 0.5f, 180.f);
 
 #ifdef WHITTED_STYLE
-	light = new Light(float3(1.f, 5.f, -10.0f), LightType::POINT);
+	light = new Light(float3(0.f, 1.8f, 0.0f), LightType::POINT);
 #else
 	light = new AreaLight(float3(-1.0f, 1.8f, 0.f), float3(1.0f, 1.8f, 0.f), float3(-1.0f, 1.8f, 1.0f), float3(1.0f, 1.8f, 1.0f));
 

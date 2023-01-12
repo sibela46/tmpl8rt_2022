@@ -23,7 +23,7 @@
 #define PURPLE			float3(0.8118, 0.0078, 0.4275)
 #define HORIZON			10.f
 #define NUM_PHOTONS		100
-#define MAX_DEPTH		10
+#define MAX_DEPTH		5
 #define GATHER_DEPTH	10
 #define K				5
 #define NUM_SAMPLES		3

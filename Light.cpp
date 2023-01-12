@@ -69,7 +69,7 @@ float3 Light::GetNormal()
 	return 0;
 }
 
-float3 Light::GetRandomPoint()
+float3 Light::GetRandomPoint(int idx)
 {
 	return 0;
 }

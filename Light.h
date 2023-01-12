@@ -9,7 +9,7 @@ public:
 
 	virtual float3	GetPosition(int i = 0);
 	virtual float3	GetNormal();
-	virtual float3	GetRandomPoint();
+	virtual float3	GetRandomPoint(int idx = 0);
 	virtual float	GetArea();
 	float	GetEmission();
 	float3	GetColour();

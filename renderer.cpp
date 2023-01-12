@@ -109,26 +109,28 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 float3 Renderer::Sample(Ray& ray)
 {
-	float3 T = 1;
-	float3 R = 0;
+	float3 throughput = float3(1);
+	float3 radiance = float3(0);
 
-	int depth = 0;
 	float p = 0.5f;
-	while (1)
+	for (int i = 0; i < MAX_DEPTH; i++)
 	{
-		depth++;
 		scene->FindNearest(ray);
-		float3 BRDF = ray.objMaterial.colour * INVPI;
+		float3 I = ray.IntersectionPoint();
 		float3 N = scene->GetNormal(ray);
-		if (ray.objIdx == -1) break; // NO HIT
+		float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
+		if (ray.objIdx == -1) return scene->GetSkydomeTexture(ray); // NO HIT
 		if (ray.objMaterial.type == MaterialType::LIGHT) return BRIGHT; // LIGHT HIT
 
-		float3 L, NL;
+
+		float3 PL, NL;
 		float A;
-		scene->RandomPointOnLight(L, NL, A);
+		scene->RandomPointOnLight(PL, NL, A);
+		float3 L = normalize(PL - I);
 		float3 bias = 0.001f * N;
-		float3 rayOrigin = ray.IntersectionPoint() + bias;
-		Ray lightRay(rayOrigin, L);
+		float3 O = ray.IntersectionPoint() + bias;
+		Ray lightRay(O, L);
+
 		if (dot(N, L) > 0 && dot(NL, -L) > 0)
 		{
 			scene->FindNearest(lightRay);
@@ -136,24 +138,22 @@ float3 Renderer::Sample(Ray& ray)
 			{
 				float solidAngle = (dot(NL, -L) * A) / (lightRay.t * lightRay.t);
 				float lightPDF = 1 / solidAngle;
-				R += T * (dot(N, L) / lightPDF) * BRDF * 1.0f;
+				radiance += throughput * (dot(N, L) / lightPDF) * BRDF * 1.0f;
 			}
 		}
 
-		if (RandomFloat() > 0.5f)
-		{
-			break;
-		}
+		// Russian Roulette
+		if (RandomFloat() > p) break;
+		throughput *= 1 / p;
 
-		T *= 1/0.5f;
-
-		float3 randomUnitVec = CosineSampleHemisphere(N);
-		ray = Ray(rayOrigin, randomUnitVec);
-		float hemiPDF = 1 / (PI * 2.f);
-		T *= (dot(randomUnitVec, N) / hemiPDF) * BRDF;
+		// Continue random walk
+		float3 R = CosineSampleHemisphere(N);
+		float hemiPDF = 1 / (2.f * PI);
+		ray = Ray(O, R);
+		throughput *= (dot(N, R) / hemiPDF) * BRDF;
 	}
 
-	return R;
+	return radiance;
 }
 
 float Renderer::RussianRoulette(const float3& illumination)
