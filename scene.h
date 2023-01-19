@@ -8,6 +8,7 @@ public:
 
 	void FindNearest(Ray& ray);
 	bool IsOccluded(const Ray& ray);
+	bool ShootShadowRay(const float3& O, const float3& D, float distance);
 	float3 GetBeersLaw(Ray& ray);
 	float3 GetNormal(const Ray& ray);
 	float3 GetShade(const Ray& ray);

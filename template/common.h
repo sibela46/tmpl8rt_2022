@@ -16,14 +16,14 @@
 #define BLACK			float3(0, 0, 0)
 #define WHITE			float3(1, 1, 1)
 #define GREY			float3(0.5, 0.5, 0.5)
-#define BRIGHT			float3(1, 1, 1)
+#define BRIGHT			float3(2)
 #define RED				float3(1.0, 0.1, 0.1)
 #define GREEN			float3(0.1, 0.9, 0.1)
 #define BLUE			float3(0, 0.2118, 0.6392)
 #define PURPLE			float3(0.8118, 0.0078, 0.4275)
 #define HORIZON			10.f
 #define NUM_PHOTONS		100
-#define MAX_DEPTH		5
+#define MAX_DEPTH		10
 #define GATHER_DEPTH	10
 #define K				5
 #define NUM_SAMPLES		3

@@ -14,6 +14,7 @@ namespace Tmpl8
 		float3 GenerateRandomVec(const float3& N);
 		float3 SampleHemisphere(const float3& N);
 		float3 CosineSampleHemisphere(const float3& N);
+		float3 SamplePhong(const float3& N);
 		float3 GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
 		float RussianRoulette(const float3& illumination);
 		void Tick(float deltaTime);

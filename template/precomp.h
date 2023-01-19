@@ -92,6 +92,7 @@ using namespace std;
 #include <GLFW/glfw3native.h>
 
 //#define WHITTED_STYLE
+#define NEE
 //#define SSE
 //#define QBVH
 //#define TEXTURES
@@ -1712,6 +1713,7 @@ public:
 enum class MaterialType { DIFFUSE = 0, SPECULAR = 1, MIRROR = 2, GLASS = 3, LIGHT = 4 };
 enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, CYLINDER = 4, TORUS = 5 };
 enum class LightType { POINT = 0, DIRECTIONAL = 1, AREA = 2 };
+enum class BRDFType { DIFFUSE = 0, SPECULAR = 1 };
 
 struct Material
 {
@@ -1722,6 +1724,7 @@ struct Material
 	float emission;
 };
 
+#include "brdf.h"
 #include "ray.h"
 #include "Light.h"
 #include "AreaLight.h"

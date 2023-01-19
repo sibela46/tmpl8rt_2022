@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AreaLight.h" />
+    <ClInclude Include="brdf.h" />
     <ClInclude Include="Bvh.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Cube.h" />

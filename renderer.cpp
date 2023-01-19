@@ -118,18 +118,24 @@ float3 Renderer::Sample(Ray& ray)
 		scene->FindNearest(ray);
 		float3 I = ray.IntersectionPoint();
 		float3 N = scene->GetNormal(ray);
-		float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
-		if (ray.objIdx == -1) return scene->GetSkydomeTexture(ray); // NO HIT
-		if (ray.objMaterial.type == MaterialType::LIGHT) return BRIGHT; // LIGHT HIT
-
-
+		if (ray.objIdx == -1)
+		{
+			radiance = scene->GetSkydomeTexture(ray); // NO HIT
+			continue;
+		}
+		if (ray.objMaterial.type == MaterialType::LIGHT)
+		{
+			return BRIGHT; // LIGHT HIT
+		}
 		float3 PL, NL;
 		float A;
 		scene->RandomPointOnLight(PL, NL, A);
 		float3 L = normalize(PL - I);
-		float3 bias = 0.001f * N;
+		float3 bias = 0.001f * L;
 		float3 O = ray.IntersectionPoint() + bias;
 		Ray lightRay(O, L);
+
+		float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
 
 		if (dot(N, L) > 0 && dot(NL, -L) > 0)
 		{
@@ -138,7 +144,7 @@ float3 Renderer::Sample(Ray& ray)
 			{
 				float solidAngle = (dot(NL, -L) * A) / (lightRay.t * lightRay.t);
 				float lightPDF = 1 / solidAngle;
-				radiance += throughput * (dot(N, L) / lightPDF) * BRDF * 1.0f;
+				radiance += throughput * (dot(N, L) / lightPDF) * BRDF * BRIGHT;
 			}
 		}
 
@@ -147,10 +153,43 @@ float3 Renderer::Sample(Ray& ray)
 		throughput *= 1 / p;
 
 		// Continue random walk
-		float3 R = CosineSampleHemisphere(N);
-		float hemiPDF = 1 / (2.f * PI);
-		ray = Ray(O, R);
-		throughput *= (dot(N, R) / hemiPDF) * BRDF;
+		float3 R;
+		if (ray.objMaterial.type == MaterialType::MIRROR)
+		{
+			R = reflect(ray.D, N);
+			O = ray.IntersectionPoint() + 0.001f * R;
+			ray = Ray(O, R);
+		}
+		else if (ray.objMaterial.type == MaterialType::GLASS)
+		{
+			float fresneleffect = fresnel(I, N, 1.5);
+			if (RandomFloat() < fresneleffect)
+			{
+				R = reflect(ray.D, N);
+				bias = 0.001f * R;
+				O = ray.IntersectionPoint() + bias;
+				ray = Ray(O, R);
+			}
+			else
+			{
+				bool outside = dot(ray.D, N) < 0;
+				float ior = 1.1, eta = (outside) ? 1 / ior : ior;
+				float cosi = -dot(ray.D, N);
+				float k = 1 - eta * eta * (1 - cosi * cosi);
+				float3 refrdir = ray.D * eta + N * (eta * cosi - sqrt(k));
+				bias = 0.001f * refrdir;
+				float3 refrRayOrigin = I + bias;
+				ray = Ray(refrRayOrigin, normalize(refrdir));
+			}
+		}
+		else
+		{
+			R = CosineSampleHemisphere(N);
+			O = ray.IntersectionPoint() + 0.001f * R;
+			ray = Ray(O, R);
+			float hemiPDF = 1 / (2.f * PI);
+			throughput *= (dot(N, R) / hemiPDF) * BRDF;
+		}
 	}
 
 	return radiance;
@@ -262,7 +301,11 @@ void Renderer::Tick( float deltaTime )
 		for (int x = 0; x < SCRWIDTH; x++)
 		{
 			Ray primaryRay = camera.GetPrimaryRay(x, y);
+#ifdef NEE
 			accumulator[x + y * SCRWIDTH] += float4(Sample(primaryRay), 0);
+#else
+			accumulator[x + y * SCRWIDTH] += float4(Trace(primaryRay, 0), 0);
+#endif
 		}
 		// translate accumulator contents to rgb32 pixels
 		for (int dest = y * SCRWIDTH, x = 0; x < SCRWIDTH; x++)

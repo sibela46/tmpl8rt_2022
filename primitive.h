@@ -100,7 +100,7 @@ struct Primitive {
 			ray.objIdx = index;
 			ray.objMaterial = material;
 			ray.objType = ObjectType::TRIANGLE;
-			ray.normal = n;
+			ray.normal = normalize(cross(edge1, edge2));
 			ray.inside = dot(ray.D, n) > 0;
 			return;
 		}
