@@ -25,7 +25,7 @@ public:
 		topRight = float3( aspect, 1, 0 );
 		bottomLeft = float3( -aspect, -1, 0 );
 		forwardDir = float3(0, 0, 1.f);
-		speed = 3.f;
+		speed = 2.f;
 	}
 	float getRadians(const float angle)
 	{
@@ -91,7 +91,6 @@ public:
 		float3 Y = normalize(topLeft - bottomLeft);
 		float3 Z = cross(X, Y);
 
-		float speed = 0.3;
 		float3 P = X * offset.x + Y * offset.y + Z * offset.z;
 		P = P * speed;
 

@@ -4,28 +4,31 @@
     <ClCompile Include="template\template.cpp">
       <Filter>template</Filter>
     </ClCompile>
-    <ClCompile Include="Bvh.cpp">
+    <ClCompile Include="src\Cube.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Cube.cpp">
+    <ClCompile Include="src\DataCollector.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="DataCollector.cpp">
+    <ClCompile Include="src\Light.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
+    <ClCompile Include="src\PhotonMap.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="renderer.cpp">
+    <ClCompile Include="src\Renderer.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="Scene.cpp">
+    <ClCompile Include="src\Scene.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="PhotonMap.cpp">
+    <ClCompile Include="src\AreaLight.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="AreaLight.cpp">
+    <ClCompile Include="src\Bvh.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GuidedSampler.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -39,40 +42,40 @@
     <ClInclude Include="template\ray.h">
       <Filter>template</Filter>
     </ClInclude>
-    <ClInclude Include="primitive.h">
-      <Filter>template</Filter>
-    </ClInclude>
-    <ClInclude Include="Bvh.h">
+    <ClInclude Include="src\Bvh.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="camera.h">
+    <ClInclude Include="src\camera.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="Cube.h">
+    <ClInclude Include="src\Cube.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="DataCollector.h">
+    <ClInclude Include="src\DataCollector.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
+    <ClInclude Include="src\KDTree.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="renderer.h">
+    <ClInclude Include="src\Light.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="Scene.h">
+    <ClInclude Include="src\PhotonMap.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="PhotonMap.h">
+    <ClInclude Include="src\primitive.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="KDTree.h">
+    <ClInclude Include="src\Renderer.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="AreaLight.h">
+    <ClInclude Include="src\Scene.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="brdf.h">
+    <ClInclude Include="src\AreaLight.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GuidedSampler.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

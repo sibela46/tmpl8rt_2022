@@ -10,6 +10,7 @@ void Renderer::Init()
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
 
 	data = new DataCollector();
+	sampler = new GuidedSampler();
 	scene = new Scene(data);
 }
 
@@ -19,41 +20,61 @@ void Renderer::Init()
 float3 Renderer::Trace( Ray& ray, int depth )
 {
 	scene->FindNearest(ray);
-	if (ray.objIdx == -1 || depth >= MAX_DEPTH) return scene->GetSkydomeTexture(ray); // or a fancy sky color
-	
+	if (ray.objIdx == -1) return scene->GetSkydomeTexture(ray); // or a fancy sky color
+	if (depth >= MAX_DEPTH) return BLACK;
+
 	if (depth == 0) data->UpdateIntersectedPrimitives();
 
 	float3 I = ray.O + ray.t * ray.D;
 	float3 N = scene->GetNormal(ray);
+
+	float3 colour = 0;
+
+	float3 albedo = scene->GetAlbedo(ray, N);
+	if (ray.objMaterial.type == MaterialType::SAMPLEPOINT) return BLACK;
 
 	if (ray.objMaterial.type == MaterialType::DIFFUSE)
 	{
 #ifdef WHITTED_STYLE
 		return scene->GetAlbedo(ray, ray.normal) * scene->GetShade(ray);
 #else
-		float3 bias = 0.001f * N;
-		float3 rayOrigin = I + bias;
 
 		float3 illumination = 0;
 
 		for (int i = 0; i < NUM_SAMPLES; ++i)
 		{
-			float p = 0.5f;
-			if (RandomFloat() >= p)
-				return illumination;
+			float weightIndex = -1;
+#ifdef PATH_GUIDING
+			float3 randomUnitVec = sampler->SampleDirection(I, N, weightIndex);
+#else
+			float3 randomUnitVec = SampleHemisphere(N);
+#endif // PATH_GUIDING
 
-			illumination *= (1 / p);
-			float3 randomUnitVec = CosineSampleHemisphere(N);
+			float3 bias = 0.001f * N;
+			float3 rayOrigin = I + bias;
 			Ray newRay = Ray(rayOrigin, randomUnitVec);
-			float3 incoming = Trace(newRay, depth + 1);
-			float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
-			float3 cos_i = incoming * dot(randomUnitVec, N); // irradiance
-			illumination += 2.f * PI * cos_i * BRDF;
+			float nDotR = dot(N, randomUnitVec);
+			float3 BRDF = albedo * INVPI;
+			float3 PDF = 1 / (2 * PI);
+			illumination += Trace(newRay, depth+1) * nDotR * BRDF * (1 / PDF);
+
+#ifdef PATH_GUIDING
+			sampler->UpdateWeights(I, weightIndex, illumination);
+#endif // PATH_GUIDING
 		}
 		
 		illumination /= NUM_SAMPLES;
 
-		return illumination;
+		colour = illumination;
+
+#ifdef RUSSIAN_ROULETTE
+		float p = max(albedo.x, max(albedo.y, albedo.z));
+		if (p < RandomFloat())
+			return colour;
+
+		colour *= (1 / p);
+#endif // RUSSIAN_ROULETTE
+
 #endif
 	}
 	else if (ray.objMaterial.type == MaterialType::MIRROR)
@@ -67,7 +88,7 @@ float3 Renderer::Trace( Ray& ray, int depth )
 
 		float3 reflectionColour = Trace(reflRay, depth + 1);
 
-		return reflectionColour;
+		colour = reflectionColour;
 	}
 	else if (ray.objMaterial.type == MaterialType::GLASS)
 	{
@@ -95,16 +116,80 @@ float3 Renderer::Trace( Ray& ray, int depth )
 			refractionColour = Trace(refrRay, depth + 1) * scene->GetBeersLaw(refrRay);
 		}
 
-		return (fresneleffect * reflectionColour + 
+		colour = (fresneleffect * reflectionColour + 
 				(1 - fresneleffect) * refractionColour * ray.objMaterial.Ks)
 				* scene->GetAlbedo(ray, N);
 	}
 	else if (ray.objMaterial.type == MaterialType::LIGHT)
 	{
-		return BRIGHT;
+		connectedLightRays++;
+		colour = BRIGHT;
 	}
 
-	return 0;
+	return colour;
+}
+
+void Renderer::TraceGuidingPath(Ray& ray, int depth)
+{
+	scene->FindNearest(ray);
+	if (ray.objIdx == -1) return; // or a fancy sky color
+
+	switch (ray.objMaterial.type)
+	{
+	case MaterialType::DIFFUSE:
+		{
+			float3 I = ray.O + ray.t * ray.D;
+			float3 N = scene->GetNormal(ray);
+
+			float3 bias = 0.001f * N;
+			float3 rayOrigin = I + bias;
+
+			for (int i = 0; i < NUM_SAMPLES; ++i)
+			{
+				float3 randomUnitVec = SampleHemisphere(N);
+				Ray newRay = Ray(rayOrigin, randomUnitVec);
+				
+				bool reject = sampler->RejectIfInRadius(I, 0.01f);
+				if (!reject)
+				{
+					sampler->AddSamplePoint(I, randomUnitVec);
+				}
+				// diffuse bounce
+				TraceGuidingPath(newRay, depth + 1);
+			}
+		}
+		break;
+	case MaterialType::LIGHT:
+		{
+			return;
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+void Renderer::BuildGuidingPath()
+{
+	if (!isTrainingPhase) return;
+	// build SD-tree
+	Ray centreRay = camera.GetPrimaryRay(SCRWIDTH / 2, SCRHEIGHT / 2);
+	for (int i = 0; i < 1000; i++)
+	{
+		TraceGuidingPath(centreRay, 0);
+	}
+	sampler->AddPath();
+	//scene->AddSamplePointsToScene(sampler->GetSamplePoints());
+}
+
+void Renderer::StopTrainingPhase()
+{
+	isTrainingPhase = false;
+}
+
+int Renderer::GetConnectedLightRays()
+{
+	return connectedLightRays;
 }
 
 float3 Renderer::Sample(Ray& ray)
@@ -116,17 +201,15 @@ float3 Renderer::Sample(Ray& ray)
 	for (int i = 0; i < MAX_DEPTH; i++)
 	{
 		scene->FindNearest(ray);
+		if (ray.objIdx == -1) return BLACK;// scene->GetSkydomeTexture(ray); // NO HIT
+
 		float3 I = ray.IntersectionPoint();
 		float3 N = scene->GetNormal(ray);
-		if (ray.objIdx == -1)
-		{
-			radiance = scene->GetSkydomeTexture(ray); // NO HIT
-			continue;
-		}
 		if (ray.objMaterial.type == MaterialType::LIGHT)
 		{
 			return BRIGHT; // LIGHT HIT
 		}
+
 		float3 PL, NL;
 		float A;
 		scene->RandomPointOnLight(PL, NL, A);
@@ -135,7 +218,8 @@ float3 Renderer::Sample(Ray& ray)
 		float3 O = ray.IntersectionPoint() + bias;
 		Ray lightRay(O, L);
 
-		float3 BRDF = scene->GetAlbedo(ray, N) * INVPI;
+		float3 albedo = scene->GetAlbedo(ray, N);
+		float3 BRDF = albedo * INVPI;
 
 		if (dot(N, L) > 0 && dot(NL, -L) > 0)
 		{
@@ -144,13 +228,12 @@ float3 Renderer::Sample(Ray& ray)
 			{
 				float solidAngle = (dot(NL, -L) * A) / (lightRay.t * lightRay.t);
 				float lightPDF = 1 / solidAngle;
-				radiance += throughput * (dot(N, L) / lightPDF) * BRDF * BRIGHT;
+				radiance += throughput * (dot(N, L) / lightPDF) * BRDF;
 			}
 		}
 
 		// Russian Roulette
-		if (RandomFloat() > p) break;
-		throughput *= 1 / p;
+		//float p = max(throughput.x, max(throughput.y, throughput.z));
 
 		// Continue random walk
 		float3 R;
@@ -173,22 +256,30 @@ float3 Renderer::Sample(Ray& ray)
 			else
 			{
 				bool outside = dot(ray.D, N) < 0;
-				float ior = 1.1, eta = (outside) ? 1 / ior : ior;
+				float ior = 1.5, eta = (outside) ? 1 / ior : ior;
 				float cosi = -dot(ray.D, N);
 				float k = 1 - eta * eta * (1 - cosi * cosi);
 				float3 refrdir = ray.D * eta + N * (eta * cosi - sqrt(k));
 				bias = 0.001f * refrdir;
-				float3 refrRayOrigin = I + bias;
-				ray = Ray(refrRayOrigin, normalize(refrdir));
+				float3 refrRayOrigin = outside ? I + bias : I - bias;
+				ray = Ray(refrRayOrigin, (refrdir));
+				float nDotR = dot(N, refrdir);
+				float hemiPDF = nDotR / PI;
+				throughput *= (nDotR / hemiPDF) * BRDF;
 			}
 		}
 		else
 		{
+			if (p < RandomFloat()) break;
+
+			throughput *= (1 / p);
+
 			R = CosineSampleHemisphere(N);
 			O = ray.IntersectionPoint() + 0.001f * R;
 			ray = Ray(O, R);
-			float hemiPDF = 1 / (2.f * PI);
-			throughput *= (dot(N, R) / hemiPDF) * BRDF;
+			float nDotR = dot(N, R);
+			float hemiPDF = nDotR / PI;
+			throughput *= (nDotR / hemiPDF) * BRDF;
 		}
 	}
 
@@ -235,31 +326,21 @@ float3 Renderer::SampleHemisphere(const float3& N)
 	float sinTheta = sqrtf(1 - r1 * r1);
 	float phi = 2 * PI * r2;
 	float x = sinTheta * cosf(phi);
-	float z = sinTheta * sinf(phi);
-	float3 randomVec = float3(x, r1, z);
+	float y = sinTheta * sinf(phi);
+	float3 randomVec = float3(x, y, r1);
 	if (dot(randomVec, N) < 0) randomVec = -randomVec;
 	return randomVec;
 }
 
 float3 Renderer::CosineSampleHemisphere(const float3& N)
 {
-	float r1 = 2.0f * PI * RandomFloat();
-	float r2 = RandomFloat();
-	float r2s = sqrt(r2);
-
-	float3 w = N;
-	float3 u;
-	if (fabs(w.x) > 0.1f)
-		u = cross(float3(0.f, 1.f, 0.f), w);
-	else
-		u = cross(float3(1.f, 0.f, 0.f), w);
-
-	u = normalize(u);
-	float3 v = cross(w, u);
-	float3 d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2));
-	d = normalize(d);
-
-	return d;
+	float r1 = RandomFloat(), r0 = RandomFloat();
+	float r = sqrt(r0);
+	float theta = 2 * PI * r1;
+	float x = r * cosf(theta);
+	float y = r * sinf(theta);
+	float3 dir = normalize(float3(x, y, sqrt(1 - r0)));
+	return  dot(dir, N) > 0.f ? dir : dir * -1;
 }
 
 float3 Renderer::GenerateRandomVec(const float3& N)
@@ -291,6 +372,7 @@ void Renderer::Tick( float deltaTime )
 	// animation
 	static float animTime = 0;
 	//scene.SetTime( animTime += deltaTime * 0.002f );
+
 	// pixel loop
 	Timer t;
 	// lines are executed as OpenMP parallel tasks (disabled in DEBUG)
@@ -315,6 +397,11 @@ void Renderer::Tick( float deltaTime )
 			screen->pixels[dest + x] = 
 				RGBF32_to_RGB8( &colour );
 		}
+	}
+	
+	if (accumulatorCounter >= TRAINING_COUNT)
+	{
+		StopTrainingPhase();
 	}
 
 	// performance report - running average - ms, MRays/s

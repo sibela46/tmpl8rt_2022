@@ -7,6 +7,7 @@ public:
 	virtual ~Scene() = default;
 
 	void FindNearest(Ray& ray);
+	void AddSamplePointsToScene(std::vector<SamplePoint> positions);
 	bool IsOccluded(const Ray& ray);
 	bool ShootShadowRay(const float3& O, const float3& D, float distance);
 	float3 GetBeersLaw(Ray& ray);
@@ -17,8 +18,8 @@ public:
 	void RandomPointOnLight(float3& L, float3& NL, float& A);
 
 	float3 GetDirectIllumination(const Ray& ray);
-	float3 GetIndirectIllumination();
-	float3 GetCausticsIllumination();
+	float3 GetIndirectIllumination() { return 0; };
+	float3 GetCausticsIllumination() { return 0; };
 	float3 GetRadianceFromPhotonMap(const Ray& ray);
 
 	void BuildPhotonMap();
@@ -29,6 +30,7 @@ public:
 	Bvh* bvh;
 	std::vector<Primitive> planes;
 	std::vector<Primitive> primitives;
+	std::vector<Primitive> samplePoints;
 	Light* light;
 	PhotonMap* photonMap;
 	TextureMap* skydomeTexture;

@@ -122,32 +122,33 @@
   </ItemDefinitionGroup>
   <!-- END Custom section -->
   <ItemGroup>
-    <ClCompile Include="AreaLight.cpp" />
-    <ClCompile Include="Bvh.cpp" />
-    <ClCompile Include="Cube.cpp" />
-    <ClCompile Include="DataCollector.cpp" />
-    <ClCompile Include="Light.cpp" />
-    <ClCompile Include="PhotonMap.cpp" />
-    <ClCompile Include="renderer.cpp" />
-    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="src\AreaLight.cpp" />
+    <ClCompile Include="src\Bvh.cpp" />
+    <ClCompile Include="src\Cube.cpp" />
+    <ClCompile Include="src\DataCollector.cpp" />
+    <ClCompile Include="src\GuidedSampler.cpp" />
+    <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\PhotonMap.cpp" />
+    <ClCompile Include="src\Renderer.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="template\template.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AreaLight.h" />
-    <ClInclude Include="brdf.h" />
-    <ClInclude Include="Bvh.h" />
-    <ClInclude Include="camera.h" />
-    <ClInclude Include="Cube.h" />
-    <ClInclude Include="DataCollector.h" />
-    <ClInclude Include="KDTree.h" />
-    <ClInclude Include="Light.h" />
-    <ClInclude Include="PhotonMap.h" />
-    <ClInclude Include="primitive.h" />
-    <ClInclude Include="renderer.h" />
-    <ClInclude Include="Scene.h" />
+    <ClInclude Include="src\AreaLight.h" />
+    <ClInclude Include="src\Bvh.h" />
+    <ClInclude Include="src\camera.h" />
+    <ClInclude Include="src\Cube.h" />
+    <ClInclude Include="src\DataCollector.h" />
+    <ClInclude Include="src\GuidedSampler.h" />
+    <ClInclude Include="src\KDTree.h" />
+    <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\PhotonMap.h" />
+    <ClInclude Include="src\primitive.h" />
+    <ClInclude Include="src\Renderer.h" />
+    <ClInclude Include="src\Scene.h" />
     <ClInclude Include="template\common.h" />
     <ClInclude Include="template\precomp.h" />
     <ClInclude Include="template\ray.h" />

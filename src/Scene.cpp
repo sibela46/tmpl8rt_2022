@@ -19,8 +19,9 @@ Material blackShiny = { BLACK,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greyShiny = { GREY,  MaterialType::DIFFUSE, 1.0, 1.0 };
 Material greenDiffuse = { GREEN,  MaterialType::DIFFUSE, 1.0, 0.0 };
 Material mirror = { WHITE,  MaterialType::MIRROR, 1.0, 0.0 };
-Material glass = { WHITE,  MaterialType::GLASS, 0.0, 1.0 };
+Material glass = { PURPLE,  MaterialType::GLASS, 0.0, 1.0};
 Material areaLight = { BRIGHT,  MaterialType::LIGHT, 1.0, 1.0 };
+Material samplePoint = { WHITE,  MaterialType::LIGHT, 1.0, 1.0 };
 
 Scene::Scene(DataCollector* data2)
 {
@@ -28,12 +29,13 @@ Scene::Scene(DataCollector* data2)
 
 	skydomeTexture = new TextureMap("\\assets\\table_mountain_1_puresky_4k.hdr");
 
-	Primitive sphere = Primitive(primitives.size(), ObjectType::SPHERE, float3(-0.5f, 0.0f, 0.f), 0.5f, glass);
+	Primitive sphere = Primitive(primitives.size(), ObjectType::SPHERE, float3(0.f, -0.5f, 0.3f), 0.5f, glass);
 	//primitives.push_back(sphere);
-	Primitive sphere1 = Primitive(primitives.size(), ObjectType::SPHERE, float3(0.5f, 0.0f, 0.f), 0.5f, whiteDiffuse);
+	Primitive sphere1 = Primitive(primitives.size(), ObjectType::SPHERE, float3(0.5f, -0.5f, 0.f), 0.5f, mirror);
 	//primitives.push_back(sphere1);
 
-	LoadModel(primitives.size(), "assets\\bunny.obj", glass, float3(0.0f, -0.12f, 0.0f), 5.f, 180.f);
+	LoadModel(primitives.size(), "assets\\dragon.obj", glass, float3(-0.f, -0.25f, 0.5f), 2.f, -70.f);
+	//LoadModel(primitives.size(), "assets\\bunny.obj", glass, float3(0.0f, -0.25f, 0.f), 5.f, 155.f);
 
 #ifdef WHITTED_STYLE
 	light = new Light(float3(0.f, 1.8f, 0.0f), LightType::POINT);
@@ -42,23 +44,47 @@ Scene::Scene(DataCollector* data2)
 
 	Primitive light1 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, light->GetPosition(0), light->GetPosition(1), light->GetPosition(2), light->GetNormal(), areaLight);
 	Primitive light2 = Primitive(planes.size() + primitives.size(), ObjectType::TRIANGLE, light->GetPosition(1), light->GetPosition(2), light->GetPosition(3), light->GetNormal(), areaLight);
-	/*primitives.push_back(light1);
-	primitives.push_back(light2);*/
+	primitives.push_back(light1);
+	primitives.push_back(light2);
 #endif
 
-	Primitive plane1 = Primitive(primitives.size(), ObjectType::PLANE, float3(1, 0, 0), 2.f, purpleDiffuse); // left wall
-	Primitive plane2 = Primitive(primitives.size()+1, ObjectType::PLANE, float3(-1, 0, 0), 2.f, blueDiffuse); // right wall
-	Primitive plane3 = Primitive(primitives.size()+2, ObjectType::PLANE, float3(0, -1, 0), 2.f, whiteDiffuse); // ceiling
-	Primitive plane4 = Primitive(primitives.size()+3, ObjectType::PLANE, float3(0, 1, 0), 1.f, whiteDiffuse); // floor wall
-	Primitive plane5 = Primitive(primitives.size()+4, ObjectType::PLANE, float3(0, 0, 1), 3.f, whiteDiffuse); // front wall
-	Primitive plane6 = Primitive(primitives.size()+5, ObjectType::PLANE, float3(0, 0, -1), 2.f, whiteDiffuse); // back wall
+	float X = 2.f;
+	float Y = 2.f;
+	float Z = 2.f;
+	float3 a(-X, -Y/2, -Z);
+	float3 b(X, -Y/2, -Z);
+	float3 c(X, Y, -Z);
+	float3 d(-X, Y, -Z);
 
-	planes.push_back(plane1);
-	planes.push_back(plane2);
-	planes.push_back(plane3);
-	planes.push_back(plane4);
-	planes.push_back(plane5);
-	planes.push_back(plane6);
+	float3 e(-X, -Y/2, Z);
+	float3 f(X, -Y/2, Z);
+	float3 g(X, Y, Z);
+	float3 h(-X, Y, Z);
+
+	Primitive leftWall1 = Primitive(primitives.size(), ObjectType::TRIANGLE, a, e, d, float3(-1.f, 0.f, 0.f), purpleDiffuse);
+	Primitive leftWall2 = Primitive(primitives.size(), ObjectType::TRIANGLE, d, e, h, float3(-1.f, 0.f, 0.f), purpleDiffuse);
+	primitives.push_back(leftWall1);
+	primitives.push_back(leftWall2);
+	Primitive rightWall1 = Primitive(primitives.size(), ObjectType::TRIANGLE, b, c, f, float3(1.f, 0.f, 0.f), blueDiffuse);
+	Primitive rightWall2 = Primitive(primitives.size(), ObjectType::TRIANGLE, f, c, g, float3(1.f, 0.f, 0.f), blueDiffuse);
+	primitives.push_back(rightWall1);
+	primitives.push_back(rightWall2);
+	Primitive backWall1 = Primitive(primitives.size(), ObjectType::TRIANGLE, e, g, f, float3(0.f, 0.f, -1.f), whiteDiffuse);
+	Primitive backWall2 = Primitive(primitives.size(), ObjectType::TRIANGLE, h, g, e, float3(0.f, 0.f, -1.f), whiteDiffuse);
+	primitives.push_back(backWall1);
+	primitives.push_back(backWall2);
+	Primitive topWall1 = Primitive(primitives.size(), ObjectType::TRIANGLE, g, h, d, float3(0.f, -1.f, 0.f), whiteDiffuse);
+	Primitive topWall2 = Primitive(primitives.size(), ObjectType::TRIANGLE, c, g, d, float3(0.f, -1.f, 0.f), whiteDiffuse);
+	primitives.push_back(topWall1);
+	primitives.push_back(topWall2);
+	Primitive floor1 = Primitive(primitives.size(), ObjectType::TRIANGLE, e, b, a, float3(0.f, 1.f, 0.f), whiteDiffuse);
+	Primitive floor2 = Primitive(primitives.size(), ObjectType::TRIANGLE, f, b, e, float3(0.f, 1.f, 0.f), whiteDiffuse);
+	primitives.push_back(floor1);
+	primitives.push_back(floor2);
+	Primitive frontWall1 = Primitive(primitives.size(), ObjectType::TRIANGLE, a, b, d, float3(0.f, 0.f, 1.f), whiteDiffuse);
+	Primitive frontWall2 = Primitive(primitives.size(), ObjectType::TRIANGLE, d, b, c, float3(0.f, 0.f, 1.f), whiteDiffuse);
+	primitives.push_back(frontWall1);
+	primitives.push_back(frontWall2);
 
 	auto start = high_resolution_clock::now();
 	bvh = new Bvh(primitives, data);
@@ -74,11 +100,24 @@ Scene::Scene(DataCollector* data2)
 	data->UpdateQBVHNodeCount(bvh->GetNodesUsed());
 }
 
+void Scene::AddSamplePointsToScene(std::vector<SamplePoint> points)
+{
+	for (auto point : points)
+	{
+		Primitive sphere = Primitive(primitives.size(), ObjectType::SPHERE, point.position, 0.1f, samplePoint);
+		samplePoints.push_back(sphere);
+	}
+}
+
 void Scene::FindNearest(Ray& ray)
 {
 	for (int i = 0; i < planes.size(); ++i)
 	{
-		//planes[i].Intersect(ray);
+		planes[i].Intersect(ray);
+	}
+	for (int i = 0; i < samplePoints.size(); ++i)
+	{
+		samplePoints[i].Intersect(ray);
 	}
 #ifdef QBVH
 	bvh->IntersectQBVH(ray, Bvh::rootNodeIdx);
@@ -273,16 +312,6 @@ float3 Scene::GetDirectIllumination(const Ray& ray)
 	const float3 f = ray.objMaterial.colour;
 	const float cos = abs(dot(dirToLight, ray.normal));
 	return f * cos * light->GetEmission() / pdf_dir;
-}
-
-float3 Scene::GetIndirectIllumination()
-{
-	return float3(0.1);
-}
-
-float3 Scene::GetCausticsIllumination()
-{
-	return float3(0);
 }
 
 float3 Scene::GetRadianceFromPhotonMap(const Ray& ray)

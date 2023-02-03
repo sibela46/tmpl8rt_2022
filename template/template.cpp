@@ -281,6 +281,9 @@ void main()
 		"	return mix( rgbOffset, rgbL, lowpassBlend ); }"											\
 		"void main(){f=vec4(sqrt(fxaa(vec2(1240,800),uv)),1);}", true);
 #endif
+#ifdef PATH_GUIDING
+	app->BuildGuidingPath();
+#endif // PATH_GUIDING
 	float deltaTime = 0;
 	static int frameNr = 0;
 	static Timer timer;
@@ -301,7 +304,14 @@ void main()
 			glfwPollEvents();
 		}
 		if (!running) break;
+		if (frameNr == TRAINING_COUNT) break;
 	}
+	//ofstream MyFile("connectedRays.txt");
+	//// Write to the file
+	//int lightRays = app->GetConnectedLightRays();
+	//MyFile << lightRays;
+	//// Close the file
+	//MyFile.close();
 	SaveImage("./render.png", window);
 	// close down
 	app->Shutdown();

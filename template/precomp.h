@@ -93,6 +93,8 @@ using namespace std;
 
 //#define WHITTED_STYLE
 #define NEE
+//#define PATH_GUIDING
+#define RUSSIAN_ROULETTE
 //#define SSE
 //#define QBVH
 //#define TEXTURES
@@ -1706,11 +1708,13 @@ public:
 	virtual void KeyUp( int key ) = 0;
 	virtual void KeyStillDown(int key) = 0;
 	virtual void KeyDown( int key ) = 0;
+	virtual void BuildGuidingPath() = 0;
+	virtual int  GetConnectedLightRays() = 0;
 	Surface* screen = 0;
 };
 
 // Material structure
-enum class MaterialType { DIFFUSE = 0, SPECULAR = 1, MIRROR = 2, GLASS = 3, LIGHT = 4 };
+enum class MaterialType { DIFFUSE = 0, SPECULAR = 1, MIRROR = 2, GLASS = 3, LIGHT = 4, SAMPLEPOINT = 5 };
 enum class ObjectType { PLANE = 0, TRIANGLE = 1, SPHERE = 2, CUBE = 3, CYLINDER = 4, TORUS = 5 };
 enum class LightType { POINT = 0, DIRECTIONAL = 1, AREA = 2 };
 enum class BRDFType { DIFFUSE = 0, SPECULAR = 1 };
@@ -1724,18 +1728,18 @@ struct Material
 	float emission;
 };
 
-#include "brdf.h"
 #include "ray.h"
-#include "Light.h"
-#include "AreaLight.h"
-#include "Cube.h"
-#include "DataCollector.h"
-#include "primitive.h"
-#include "KDTree.h"
-#include "PhotonMap.h"
-#include "Bvh.h"
-#include "Scene.h"
-#include "camera.h"
-#include "renderer.h"
+#include "src/Light.h"
+#include "src/AreaLight.h"
+#include "src/Cube.h"
+#include "src/DataCollector.h"
+#include "src/primitive.h"
+#include "src/KDTree.h"
+#include "src/PhotonMap.h"
+#include "src/GuidedSampler.h"
+#include "src/Bvh.h"
+#include "src/Scene.h"
+#include "src/camera.h"
+#include "src/Renderer.h"
 
 // EOF

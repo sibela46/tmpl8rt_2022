@@ -8,13 +8,16 @@ namespace Tmpl8
 	public:
 		// game flow methods
 		void Init();
-		float3 Trace(Ray& ray, int depth);
+		float3 Trace(Ray& ray, int depth );
+		void   TraceGuidingPath(Ray& ray, int depth);
+		void   BuildGuidingPath();
+		void   StopTrainingPhase();
+		int	   GetConnectedLightRays();
 		float3 Sample(Ray& ray);
 		float3 PhotonTrace(Ray& ray, int depth);
 		float3 GenerateRandomVec(const float3& N);
 		float3 SampleHemisphere(const float3& N);
 		float3 CosineSampleHemisphere(const float3& N);
-		float3 SamplePhong(const float3& N);
 		float3 GetSpecularColour(Light* light, const float3& I, const float3& N, const float3& D);
 		float RussianRoulette(const float3& illumination);
 		void Tick(float deltaTime);
@@ -31,8 +34,10 @@ namespace Tmpl8
 	int2 mousePos;
 	float4* accumulator;
 	int accumulatorCounter = 0;
+	int connectedLightRays = 0;
 	//Scene scene;
 	Scene* scene;
+	GuidedSampler* sampler;
 	DataCollector* data;
 	Camera camera;
 	bool pressR;
@@ -42,6 +47,7 @@ namespace Tmpl8
 	int prevX;
 	int prevY;
 	bool forward;
+	bool isTrainingPhase = true;
 };
 
 } // namespace Tmpl8

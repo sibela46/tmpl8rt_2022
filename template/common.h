@@ -16,17 +16,21 @@
 #define BLACK			float3(0, 0, 0)
 #define WHITE			float3(1, 1, 1)
 #define GREY			float3(0.5, 0.5, 0.5)
-#define BRIGHT			float3(2)
+#define BRIGHT			float3(1)
 #define RED				float3(1.0, 0.1, 0.1)
 #define GREEN			float3(0.1, 0.9, 0.1)
 #define BLUE			float3(0, 0.2118, 0.6392)
 #define PURPLE			float3(0.8118, 0.0078, 0.4275)
+#define LIGHT_COLOUR	float3(0.9411f, 0.9019f, 0.5098f)
 #define HORIZON			10.f
 #define NUM_PHOTONS		100
-#define MAX_DEPTH		10
+#define MAX_DEPTH		5
 #define GATHER_DEPTH	10
 #define K				5
-#define NUM_SAMPLES		3
+#define NUM_SAMPLES		1
+#define LEARNING_RATE   0.8f
+#define TRAINING_COUNT  30
+#define NUM_STRATA		40
 
 // IMPORTANT NOTE ON OPENCL COMPATIBILITY ON OLDER LAPTOPS:
 // Without a GPU, a laptop needs at least a 'Broadwell' Intel CPU (5th gen, 2015):
